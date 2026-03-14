@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { PostLoginShell } from "@/components/post-login-shell";
-import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { SectionCard } from "@/components/section-card";
 import { StatusPill } from "@/components/status-pill";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
+import { patientJourney } from "@/lib/mock-data";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { cx, themeClassNames } from "@/theme";
 
@@ -16,29 +16,45 @@ export const metadata: Metadata = {
 export default async function MessagesPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
+  const fallbackDrafts = [
+    {
+      id: patientJourney.messageDraft.id,
+      author_role: patientJourney.messageDraft.authorRole,
+      subject: patientJourney.messageDraft.subject,
+      body: patientJourney.messageDraft.body,
+      approved: patientJourney.messageDraft.approved,
+      updated_at: "2026-03-14T09:00:00Z",
+    },
+    {
+      id: "draft-provider-follow-up",
+      author_role: "provider" as const,
+      subject: "Follow-up after your first Humira dose",
+      body: "Hi Maya, I reviewed your checklist progress. Please submit the symptom baseline tonight and message us if you notice anything unexpected after the dose.",
+      approved: true,
+      updated_at: "2026-03-13T15:30:00Z",
+    },
+  ];
+  let draftItems: Array<{
+    id: string;
+    author_role: "patient" | "provider";
+    subject: string;
+    body: string;
+    approved: boolean;
+    updated_at: string;
+  }> = fallbackDrafts;
 
-  if (!patientProfileId) {
-    return (
-      <PostLoginShell currentPath="/messages">
-        <RoleAwareEmptyState
-          roleMode={context.role}
-          title="Messages are not available yet"
-          description="No scoped patient profile exists for drafts."
-          ctaHref="/dashboard"
-          ctaLabel="Back to dashboard"
-        />
-      </PostLoginShell>
-    );
+  if (patientProfileId) {
+    const serviceClient = getSupabaseServiceClient();
+    const { data: drafts } = await serviceClient
+      .from("message_drafts")
+      .select("id, author_role, subject, body, approved, updated_at")
+      .eq("patient_profile_id", patientProfileId)
+      .order("updated_at", { ascending: false });
+
+    if ((drafts ?? []).length > 0) {
+      draftItems = drafts ?? [];
+    }
   }
-
-  const serviceClient = getSupabaseServiceClient();
-  const { data: drafts } = await serviceClient
-    .from("message_drafts")
-    .select("id, author_role, subject, body, approved, updated_at")
-    .eq("patient_profile_id", patientProfileId)
-    .order("updated_at", { ascending: false });
-
-  const draftItems = drafts ?? [];
 
   return (
     <PostLoginShell currentPath="/messages">

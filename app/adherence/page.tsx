@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { PostLoginShell } from "@/components/post-login-shell";
-import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { SectionCard } from "@/components/section-card";
 import { StatusPill } from "@/components/status-pill";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
+import { patientJourney } from "@/lib/mock-data";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { cx, themeClassNames } from "@/theme";
 
@@ -22,29 +22,33 @@ const statusTone = {
 export default async function AdherencePage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
+  const fallbackItems = patientJourney.adherence.map((item, index) => ({
+    id: item.id,
+    scheduled_for: `2026-03-${14 + index}T${index === 0 ? "20:00:00" : index === 1 ? "19:30:00" : "10:00:00"}Z`,
+    status: item.status,
+    note: item.note,
+    updated_at: `2026-03-${14 + index}T12:00:00Z`,
+  }));
+  let items: Array<{
+    id: string;
+    scheduled_for: string | null;
+    status: "taken" | "missed" | "upcoming";
+    note: string;
+    updated_at?: string;
+  }> = fallbackItems;
 
-  if (!patientProfileId) {
-    return (
-      <PostLoginShell currentPath="/adherence">
-        <RoleAwareEmptyState
-          roleMode={context.role}
-          title="Adherence stream unavailable"
-          description="No scoped patient profile is available for this route yet."
-          ctaHref="/dashboard"
-          ctaLabel="Back to dashboard"
-        />
-      </PostLoginShell>
-    );
+  if (patientProfileId) {
+    const serviceClient = getSupabaseServiceClient();
+    const { data: checkIns } = await serviceClient
+      .from("adherence_check_ins")
+      .select("id, scheduled_for, status, note, updated_at")
+      .eq("patient_profile_id", patientProfileId)
+      .order("scheduled_for", { ascending: false, nullsFirst: false });
+
+    if ((checkIns ?? []).length > 0) {
+      items = checkIns ?? [];
+    }
   }
-
-  const serviceClient = getSupabaseServiceClient();
-  const { data: checkIns } = await serviceClient
-    .from("adherence_check_ins")
-    .select("id, scheduled_for, status, note, updated_at")
-    .eq("patient_profile_id", patientProfileId)
-    .order("scheduled_for", { ascending: false, nullsFirst: false });
-
-  const items = checkIns ?? [];
 
   return (
     <PostLoginShell currentPath="/adherence">

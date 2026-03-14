@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { PostLoginShell } from "@/components/post-login-shell";
-import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { SectionCard } from "@/components/section-card";
 import { StatusPill } from "@/components/status-pill";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
+import { patientJourney } from "@/lib/mock-data";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { cx, themeClassNames } from "@/theme";
 
@@ -22,33 +22,35 @@ const statusTone = {
 export default async function RemindersPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
+  const fallbackItems = patientJourney.reminders.map((reminder, index) => ({
+    id: reminder.id,
+    title: reminder.title,
+    send_at: `2026-03-${15 + index}T${index === 0 ? "19:00:00" : index === 1 ? "19:30:00" : "09:00:00"}Z`,
+    window_label: reminder.window,
+    channel: reminder.channel,
+    status: (index === 2 ? "sent" : "scheduled") as "scheduled" | "sent" | "cancelled",
+  }));
+  let reminderItems: Array<{
+    id: string;
+    title: string;
+    send_at: string | null;
+    window_label: string;
+    channel: string;
+    status: "scheduled" | "sent" | "cancelled";
+  }> = fallbackItems;
 
-  if (!patientProfileId) {
-    return (
-      <PostLoginShell currentPath="/reminders">
-        <RoleAwareEmptyState
-          roleMode={context.role}
-          title="Reminder stream unavailable"
-          description={
-            context.role === "provider"
-              ? "No assigned patient reminders exist for this provider context yet."
-              : "Your reminder stream is not initialized yet."
-          }
-          ctaHref="/tasks"
-          ctaLabel="Open tasks"
-        />
-      </PostLoginShell>
-    );
+  if (patientProfileId) {
+    const serviceClient = getSupabaseServiceClient();
+    const { data: reminders } = await serviceClient
+      .from("reminders")
+      .select("id, title, send_at, window_label, channel, status")
+      .eq("patient_profile_id", patientProfileId)
+      .order("send_at", { ascending: true, nullsFirst: false });
+
+    if ((reminders ?? []).length > 0) {
+      reminderItems = reminders ?? [];
+    }
   }
-
-  const serviceClient = getSupabaseServiceClient();
-  const { data: reminders } = await serviceClient
-    .from("reminders")
-    .select("id, title, send_at, window_label, channel, status")
-    .eq("patient_profile_id", patientProfileId)
-    .order("send_at", { ascending: true, nullsFirst: false });
-
-  const reminderItems = reminders ?? [];
 
   return (
     <PostLoginShell currentPath="/reminders">

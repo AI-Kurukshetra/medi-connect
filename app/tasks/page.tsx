@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PostLoginShell } from "@/components/post-login-shell";
-import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
 import { patientJourney } from "@/lib/mock-data";
@@ -90,7 +89,16 @@ function getTaskPriority(task: TaskRecord): TaskPriority {
 export default async function TasksPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
-  let taskItems: TaskRecord[] = [];
+  const fallbackTasks = patientJourney.careTasks.map((task, index) => ({
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    due_label: task.dueLabel,
+    source: task.source,
+    updated_at: `2026-03-14T0${index + 8}:00:00.000Z`,
+  }));
+  let taskItems: TaskRecord[] = fallbackTasks;
 
   if (patientProfileId) {
     const serviceClient = getSupabaseServiceClient();
@@ -100,17 +108,10 @@ export default async function TasksPage() {
       .eq("patient_profile_id", patientProfileId)
       .order("updated_at", { ascending: false });
 
-    taskItems = ((tasks ?? []) as TaskRecord[]).sort(compareTasks);
-  } else {
-    taskItems = patientJourney.careTasks.map((task, index) => ({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      due_label: task.dueLabel,
-      source: task.source,
-      updated_at: `2026-03-14T0${index + 8}:00:00.000Z`,
-    }));
+    const fetchedTasks = ((tasks ?? []) as TaskRecord[]).sort(compareTasks);
+    if (fetchedTasks.length > 0) {
+      taskItems = fetchedTasks;
+    }
   }
 
   const completedTasks = taskItems.filter((task) => task.status === "complete");
@@ -131,7 +132,7 @@ export default async function TasksPage() {
 
           <Link
             href={context.role === "provider" ? "/ai-insights" : "/support"}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-[#356ae6] px-5 text-sm font-semibold text-white shadow-[0_18px_30px_-20px_rgba(37,99,235,0.65)] transition hover:bg-[#2959d6]"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_20px_34px_-20px_rgba(59,130,246,0.75)] transition hover:brightness-[1.03]"
           >
             Add Task
           </Link>
@@ -156,73 +157,59 @@ export default async function TasksPage() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {taskItems.length > 0 ? (
-            taskItems.map((task) => {
-              const priority = priorityMeta[getTaskPriority(task)];
-              const status = statusMeta[task.status];
+          {taskItems.map((task) => {
+            const priority = priorityMeta[getTaskPriority(task)];
+            const status = statusMeta[task.status];
 
-              return (
-                <article
-                  key={task.id}
-                  className="flex flex-col gap-4 rounded-[14px] border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.2)] sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={task.status === "complete"}
-                      readOnly
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#356ae6] focus:ring-[#356ae6]"
-                    />
-                    <div className="min-w-0">
-                      <p
-                        className={cx(
-                          "text-sm font-semibold text-slate-900",
-                          task.status === "complete" && "text-slate-400 line-through",
-                        )}
-                      >
-                        {task.title}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">{task.description}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    <span
+            return (
+              <article
+                key={task.id}
+                className="flex flex-col gap-4 rounded-[14px] border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.2)] sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={task.status === "complete"}
+                    readOnly
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#356ae6] focus:ring-[#356ae6]"
+                  />
+                  <div className="min-w-0">
+                    <p
                       className={cx(
-                        "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
-                        priority.className,
+                        "text-sm font-semibold text-slate-900",
+                        task.status === "complete" && "text-slate-400 line-through",
                       )}
                     >
-                      {priority.label}
-                    </span>
-                    <span className="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
-                      {task.due_label ?? "No due date"}
-                    </span>
-                    <span
-                      className={cx(
-                        "inline-flex items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
-                        status.className,
-                      )}
-                    >
-                      {status.label}
-                    </span>
+                      {task.title}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">{task.description}</p>
                   </div>
-                </article>
-              );
-            })
-          ) : (
-            <RoleAwareEmptyState
-              roleMode={context.role}
-              title="No tasks yet"
-              description={
-                context.role === "provider"
-                  ? "No provider-scoped tasks exist yet. Create one through /api/tasks."
-                  : "You do not have active care tasks yet. A provider can add one, or you can create one through /api/tasks."
-              }
-              ctaHref="/dashboard"
-              ctaLabel="Back to dashboard"
-            />
-          )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <span
+                    className={cx(
+                      "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
+                      priority.className,
+                    )}
+                  >
+                    {priority.label}
+                  </span>
+                  <span className="inline-flex items-center rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                    {task.due_label ?? "No due date"}
+                  </span>
+                  <span
+                    className={cx(
+                      "inline-flex items-center rounded-lg px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
+                      status.className,
+                    )}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         {taskItems.length > 0 ? (

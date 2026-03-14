@@ -1,11 +1,15 @@
 -- Demo seed data for shared route MVP.
--- This script assumes auth users + public profiles already exist.
+-- Demo credentials created by this seed:
+-- patient: maya.patel@mediconnect.demo / DemoPass123!
+-- provider: elena.brooks@mediconnect.demo / DemoPass123!
 
 do $$
 declare
   v_patient_profile_id uuid;
   v_patient_user_id uuid;
   v_provider_user_id uuid;
+  v_demo_patient_user_id uuid := '11111111-1111-4111-8111-111111111111';
+  v_demo_provider_user_id uuid := '22222222-2222-4222-8222-222222222222';
   v_medication_plan_id uuid;
   v_prior_auth_request_id uuid;
   v_inventory_item_id uuid;
@@ -15,23 +19,95 @@ declare
   v_invoice_id uuid;
   v_seed_incident_id uuid;
 begin
+  insert into auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  )
+  values
+    (
+      '00000000-0000-0000-0000-000000000000',
+      v_demo_patient_user_id,
+      'authenticated',
+      'authenticated',
+      'maya.patel@mediconnect.demo',
+      crypt('DemoPass123!', gen_salt('bf')),
+      timezone('utc', now()),
+      timezone('utc', now()),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"role":"patient","full_name":"Maya Patel"}'::jsonb,
+      timezone('utc', now()),
+      timezone('utc', now())
+    ),
+    (
+      '00000000-0000-0000-0000-000000000000',
+      v_demo_provider_user_id,
+      'authenticated',
+      'authenticated',
+      'elena.brooks@mediconnect.demo',
+      crypt('DemoPass123!', gen_salt('bf')),
+      timezone('utc', now()),
+      timezone('utc', now()),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"role":"provider","full_name":"Dr. Elena Brooks"}'::jsonb,
+      timezone('utc', now()),
+      timezone('utc', now())
+    )
+  on conflict (id) do update
+    set email = excluded.email,
+        encrypted_password = excluded.encrypted_password,
+        email_confirmed_at = excluded.email_confirmed_at,
+        confirmed_at = excluded.confirmed_at,
+        raw_app_meta_data = excluded.raw_app_meta_data,
+        raw_user_meta_data = excluded.raw_user_meta_data,
+        updated_at = excluded.updated_at;
+
+  insert into public.profiles (id, role, full_name)
+  values
+    (v_demo_patient_user_id, 'patient', 'Maya Patel'),
+    (v_demo_provider_user_id, 'provider', 'Dr. Elena Brooks')
+  on conflict (id) do update
+    set role = excluded.role,
+        full_name = excluded.full_name;
+
+  insert into public.patient_profiles (
+    user_id,
+    condition_name,
+    therapy_status,
+    next_appointment_at
+  )
+  values (
+    v_demo_patient_user_id,
+    'Rheumatoid arthritis',
+    'Ready for first at-home injection',
+    timezone('utc', now()) + interval '6 day'
+  )
+  on conflict (user_id) do update
+    set condition_name = excluded.condition_name,
+        therapy_status = excluded.therapy_status,
+        next_appointment_at = excluded.next_appointment_at;
+
   select pp.id, pp.user_id
   into v_patient_profile_id, v_patient_user_id
   from public.patient_profiles pp
-  order by pp.created_at asc
+  where pp.user_id = v_demo_patient_user_id
   limit 1;
+
+  v_provider_user_id := v_demo_provider_user_id;
 
   if v_patient_profile_id is null then
-    raise notice 'seed skipped: no patient_profiles rows found';
+    raise notice 'seed skipped: demo patient profile could not be created';
     return;
   end if;
-
-  select p.id
-  into v_provider_user_id
-  from public.profiles p
-  where p.role = 'provider'
-  order by p.created_at asc
-  limit 1;
 
   insert into public.medication_plans (
     patient_profile_id,
@@ -74,7 +150,8 @@ begin
     values
       (v_patient_profile_id, 'Review the injection day checklist', 'AI translated preparation into 3 simple steps.', 'complete', 'Finished yesterday', 'ai'),
       (v_patient_profile_id, 'Submit symptom baseline', 'Complete the short pre-dose symptom form before Tuesday.', 'current', 'Due by Monday evening', 'manual'),
-      (v_patient_profile_id, 'Confirm reminder window', 'Set your preferred reminder time for first-dose day.', 'upcoming', 'Set this week', 'manual')
+      (v_patient_profile_id, 'Confirm reminder window', 'Set your preferred reminder time for first-dose day.', 'current', 'Set tonight', 'manual'),
+      (v_patient_profile_id, 'Review drafted follow-up questions', 'AI prepared travel storage and side-effect follow-up questions.', 'upcoming', 'Before Thursday follow-up', 'ai')
   ) as t(patient_profile_id, title, description, status, due_label, source)
   where not exists (
     select 1
@@ -147,6 +224,13 @@ begin
         'patient',
         'Question about travel storage',
         'I may travel with my medication next week. Can you confirm the safest storage plan?',
+        true
+      ),
+      (
+        v_patient_profile_id,
+        'provider',
+        'Follow-up after your first Humira dose',
+        'Hi Maya, I reviewed your checklist progress. Please submit the symptom baseline tonight and message us if you notice anything unexpected after the dose.',
         true
       )
   ) as md(patient_profile_id, author_role, subject, body, approved)
