@@ -10,6 +10,14 @@ const protectedMatchers = [
   "/messages",
   "/account",
   "/support",
+  "/prior-auth",
+  "/ehr",
+  "/operations",
+  "/assistance",
+  "/documents",
+  "/billing",
+  "/emergency",
+  "/ai-insights",
 ];
 
 export function proxy(request: NextRequest) {
@@ -42,6 +50,13 @@ export const config = {
     "/messages/:path*",
     "/account/:path*",
     "/support/:path*",
+    "/prior-auth/:path*",
+    "/ehr/:path*",
+    "/operations/:path*",
+    "/assistance/:path*",
+    "/documents/:path*",
+    "/billing/:path*",
+    "/emergency/:path*",
+    "/ai-insights/:path*",
   ],
 };
-

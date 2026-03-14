@@ -10,6 +10,14 @@ const links = [
   { href: "/messages", label: "Messages" },
   { href: "/account", label: "Account" },
   { href: "/support", label: "Support" },
+  { href: "/prior-auth", label: "Prior Auth" },
+  { href: "/ehr", label: "EHR" },
+  { href: "/operations", label: "Operations" },
+  { href: "/assistance", label: "Assistance" },
+  { href: "/documents", label: "Documents" },
+  { href: "/billing", label: "Billing" },
+  { href: "/emergency", label: "Emergency" },
+  { href: "/ai-insights", label: "AI Insights" },
 ];
 
 const authLinks = [
