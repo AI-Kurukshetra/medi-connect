@@ -44,16 +44,67 @@ export default async function AdherencePage() {
     .eq("patient_profile_id", patientProfileId)
     .order("scheduled_for", { ascending: false, nullsFirst: false });
 
+  const items = checkIns ?? [];
+
   return (
     <PostLoginShell currentPath="/adherence">
+      <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+        <SectionCard
+          className={themeClassNames.heroSectionCard}
+          eyebrow={`${context.role} adherence`}
+          title="Adherence timeline"
+          description="Dose tracking, notes, and status now sit inside the same dashboard shell as the rest of the care journey."
+        >
+          <div className="mb-6 flex flex-wrap gap-2">
+            <StatusPill tone="accent">Shared route</StatusPill>
+            <StatusPill>{items.length} check-ins</StatusPill>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Taken</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {items.filter((item) => item.status === "taken").length}
+              </p>
+            </div>
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Missed</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {items.filter((item) => item.status === "missed").length}
+              </p>
+            </div>
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Upcoming</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {items.filter((item) => item.status === "upcoming").length}
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="What changes"
+          title="The page feels connected to the rest of the product"
+          description="It is now easier to move from adherence events to reminders, support, or follow-up messages."
+        >
+          <div className="space-y-3">
+            <div className={themeClassNames.subtlePanel}>
+              <p className={themeClassNames.text.body}>Providers can review adherence context while keeping outreach routes one click away.</p>
+            </div>
+            <div className={themeClassNames.subtlePanel}>
+              <p className={themeClassNames.text.body}>Patients can understand their timeline without losing sight of reminders and support.</p>
+            </div>
+          </div>
+        </SectionCard>
+      </section>
+
       <SectionCard
-        eyebrow={`${context.role} mode`}
-        title="Shared adherence module"
-        description="Both roles use this route. Role-specific mutation rules are enforced on /api/adherence."
+        eyebrow="Dose history"
+        title="Check-in cards"
+        description="Status, timestamp, and note stay readable inside one consistent card pattern."
       >
         <div className="space-y-3">
-          {(checkIns ?? []).map((entry) => (
-            <div key={entry.id} className={themeClassNames.subtlePanel}>
+          {items.map((entry) => (
+            <div key={entry.id} className={themeClassNames.softPanel}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className={themeClassNames.text.bodyStrong}>
                   {entry.scheduled_for
@@ -69,7 +120,7 @@ export default async function AdherencePage() {
               </p>
             </div>
           ))}
-          {(checkIns ?? []).length === 0 ? (
+          {items.length === 0 ? (
             <p className={themeClassNames.text.body}>
               No adherence records yet. Use <code>/api/adherence</code> to create the first record.
             </p>
@@ -79,4 +130,3 @@ export default async function AdherencePage() {
     </PostLoginShell>
   );
 }
-

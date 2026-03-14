@@ -48,16 +48,67 @@ export default async function RemindersPage() {
     .eq("patient_profile_id", patientProfileId)
     .order("send_at", { ascending: true, nullsFirst: false });
 
+  const reminderItems = reminders ?? [];
+
   return (
     <PostLoginShell currentPath="/reminders">
+      <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+        <SectionCard
+          className={themeClassNames.heroSectionCard}
+          eyebrow={`${context.role} reminders`}
+          title="Reminder center"
+          description="This route now feels like part of the dashboard, not an isolated list."
+        >
+          <div className="mb-6 flex flex-wrap gap-2">
+            <StatusPill tone="accent">Notification timeline</StatusPill>
+            <StatusPill>{reminderItems.length} scheduled items</StatusPill>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Scheduled</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {reminderItems.filter((item) => item.status === "scheduled").length}
+              </p>
+            </div>
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Sent</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {reminderItems.filter((item) => item.status === "sent").length}
+              </p>
+            </div>
+            <div className={themeClassNames.metricTile}>
+              <p className={themeClassNames.text.label}>Cancelled</p>
+              <p className={cx("mt-2", themeClassNames.text.headingMetric)}>
+                {reminderItems.filter((item) => item.status === "cancelled").length}
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="What users get"
+          title="Reminder timing is easier to scan"
+          description="Window labels, channels, and send times sit on stronger cards with clearer hierarchy."
+        >
+          <div className="space-y-3">
+            <div className={themeClassNames.subtlePanel}>
+              <p className={themeClassNames.text.body}>Patients can see when messages arrive and through which channel.</p>
+            </div>
+            <div className={themeClassNames.subtlePanel}>
+              <p className={themeClassNames.text.body}>Providers can keep reminder context visible while reviewing adherence and tasks.</p>
+            </div>
+          </div>
+        </SectionCard>
+      </section>
+
       <SectionCard
-        eyebrow={`${context.role} mode`}
-        title="Shared reminders module"
-        description="This route stays the same for both roles. Role-specific fields are controlled by the API."
+        eyebrow="Reminder cards"
+        title="Scheduled messages"
+        description="Each reminder keeps timing, delivery, and current status in one visual block."
       >
         <div className="space-y-3">
-          {(reminders ?? []).map((reminder) => (
-            <div key={reminder.id} className={themeClassNames.subtlePanel}>
+          {reminderItems.map((reminder) => (
+            <div key={reminder.id} className={themeClassNames.softPanel}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className={themeClassNames.text.bodyStrong}>{reminder.title}</p>
                 <StatusPill tone={statusTone[reminder.status as keyof typeof statusTone]}>
@@ -67,14 +118,14 @@ export default async function RemindersPage() {
               <p className={cx("mt-2", themeClassNames.text.body)}>
                 {reminder.window_label} · {reminder.channel}
               </p>
-              <p className={cx("mt-2", themeClassNames.text.label)}>
+              <p className={cx("mt-3", themeClassNames.text.label)}>
                 {reminder.send_at
                   ? new Date(reminder.send_at).toLocaleString()
                   : "No send time"}
               </p>
             </div>
           ))}
-          {(reminders ?? []).length === 0 ? (
+          {reminderItems.length === 0 ? (
             <p className={themeClassNames.text.body}>
               No reminders exist yet. Create reminders via <code>/api/reminders</code>.
             </p>
@@ -84,4 +135,3 @@ export default async function RemindersPage() {
     </PostLoginShell>
   );
 }
-

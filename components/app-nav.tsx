@@ -3,9 +3,10 @@ import Link from "next/link";
 import { appTheme, cx, themeClassNames } from "@/theme";
 
 const marketingLinks = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#role-panels", label: "Role views" },
-  { href: "#dashboard-preview", label: "Dashboard" },
+  { href: "#story", label: "Story" },
+  { href: "#roles", label: "Roles" },
+  { href: "#workspace", label: "Workspace" },
+  { href: "#launch", label: "Launch" },
 ] as const;
 
 interface AppNavProps {
@@ -22,7 +23,7 @@ export function AppNav({ currentPath }: AppNavProps) {
             alt={`${appTheme.brand.name} logo`}
             width={40}
             height={40}
-            className="h-10 w-10 rounded-xl object-cover"
+            className="h-10 w-10 rounded-[18px] object-cover"
             priority
           />
         </div>
@@ -44,7 +45,7 @@ export function AppNav({ currentPath }: AppNavProps) {
         </nav>
 
         <div className="flex flex-wrap gap-2 sm:items-center lg:justify-end">
-          <div className={themeClassNames.chip}>Hackathon MVP</div>
+          <div className={themeClassNames.chip}>Hackathon-ready MVP</div>
           <Link
             href="/sign-in"
             className={

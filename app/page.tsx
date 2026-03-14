@@ -7,117 +7,124 @@ import { patientJourney } from "@/lib/mock-data";
 import { appTheme, cx, themeClassNames, themeLayoutClasses } from "@/theme";
 
 export const metadata: Metadata = {
-  title: "AI Specialty Medication Landing Page",
+  title: "AI Care Coordination Landing Page",
   description:
-    "MediConnect helps patients and providers move from a clear landing page into sign-in, sign-up, and a structured role-aware dashboard.",
+    "MediConnect now opens with a stronger landing page, cleaner auth entry, and a structured dashboard workspace for patients and providers.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "MediConnect | Landing to dashboard flow",
+    title: "MediConnect | Landing page to care workspace",
     description:
-      "A patient-first care coordination MVP with a proper landing page, auth flow, and role-based dashboard structure.",
+      "A patient-first specialty medication MVP with a refined landing page and a proper role-aware dashboard shell.",
     url: "/",
     siteName: appTheme.brand.name,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MediConnect | Landing to dashboard flow",
+    title: "MediConnect | Landing page to care workspace",
     description:
-      "Landing page, auth flow, and role-aware dashboard structure for specialty care coordination.",
+      "Refined landing page, auth flow, and role-aware dashboard shell for specialty care coordination.",
   },
 };
 
 export default function Home() {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const { patient, provider, medication, profile, providerSummary, careTasks, reminders } =
+  const { patient, provider, profile, medication, aiInsights, careTasks, reminders, providerSummary } =
     patientJourney;
 
-  const heroStats = [
+  const signalCards = [
     {
-      label: "Flow",
-      value: "Landing -> Auth -> Dashboard",
-      detail: "The first-time journey is visible before the user creates an account.",
+      label: "Entry flow",
+      value: "Landing -> Auth -> Workspace",
+      detail: "The first-time experience is now easy to explain in a demo.",
     },
     {
-      label: "Roles",
+      label: "Primary roles",
       value: "Patient + Provider",
-      detail: "One product structure with role-aware panels after sign-in.",
+      detail: "One product shell, two perspectives, less duplication.",
     },
     {
-      label: "AI help",
-      value: "Guidance only",
-      detail: "AI explains, summarizes, and drafts without making clinical decisions.",
-    },
-  ];
-
-  const journeySteps = [
-    {
-      title: "Start on the landing page",
-      detail:
-        "Users first understand what MediConnect does, who it helps, and what happens next.",
-    },
-    {
-      title: "Choose sign in or sign up",
-      detail:
-        "Auth is intentionally short so the product story happens on the marketing page, not inside the form.",
-    },
-    {
-      title: "Enter the structured dashboard",
-      detail:
-        "After sign-in, the user sees a branded header, a sidebar, and role-wise panels in a proper app shell.",
+      label: "AI role",
+      value: "Explain, draft, summarize",
+      detail: "AI reduces confusion without replacing human decisions.",
     },
   ];
 
-  const roleCards = [
+  const storyBlocks = [
     {
-      eyebrow: "Patient view",
-      title: "A calm dashboard that answers: what do I do next?",
+      title: "Patients feel oriented faster",
       detail:
-        "Patients see medication instructions, reminders, support, and drafted questions in one place.",
-      points: [
-        `Follow a clearer start plan for ${medication.name}.`,
-        "Track reminders and refill timing without extra clicks.",
-        "Open support and message drafts from the same sidebar.",
-      ],
-      ctaHref: "/sign-up",
-      ctaLabel: "Create patient account",
-      tone: "accent" as const,
+        "The first screen frames the medication journey clearly before the user sees a form or dashboard module.",
     },
     {
-      eyebrow: "Provider view",
-      title: "A review workspace built for quick follow-up.",
+      title: "Providers review from the same workspace",
       detail:
-        "Providers use the same routes, but the side panel and dashboard blocks focus on patient status, risk, and outreach.",
-      points: [
-        "Scan blockers and adherence context immediately.",
-        "Use AI summaries to prep outreach faster.",
-        "Move from review to message draft without leaving the workspace.",
-      ],
-      ctaHref: "/sign-in",
-      ctaLabel: "Open provider flow",
-      tone: "warning" as const,
+        "Shared routes keep the demo simple while the dashboard panels shift to the right provider actions.",
+    },
+    {
+      title: "Every screen points to the next step",
+      detail:
+        "The MVP stays focused on what happens next, not enterprise workflow depth.",
     },
   ];
 
-  const workspaceModules = [
+  const workspacePanels = [
     {
-      title: "Shared dashboard",
-      detail: "Overview cards, activity counts, and next actions for the signed-in role.",
+      title: "Header",
+      detail: "Brand, session context, support, and account actions stay visible after sign-in.",
     },
     {
-      title: "Sidebar navigation",
-      detail: "Core care routes stay visible so users can move through the flow without getting lost.",
+      title: "Sidebar",
+      detail: "Dashboard, tasks, reminders, messages, support, account, and role panels all stay in one navigation system.",
     },
     {
       title: "Role panel",
-      detail: "Patients get guidance and support actions; providers get review and follow-up actions.",
+      detail: "Patients see guidance and support prompts; providers see risk, outreach, and review actions.",
     },
     {
-      title: "Branded header",
-      detail: "Logo, account access, and session controls are always visible after sign-in.",
+      title: "Main canvas",
+      detail: "Each route opens inside the same shell so the structure feels consistent across the app.",
     },
+  ];
+
+  const roleBoards = [
+    {
+      eyebrow: "Patient board",
+      title: "A calmer therapy start experience",
+      detail:
+        "The patient flow focuses on medication instructions, reminders, support, and one next-step board.",
+      tone: "accent" as const,
+      points: [
+        aiInsights[0]?.summary ?? "Review your next medication steps in plain language.",
+        `${medication.name} refill due in ${medication.refillDueInDays} days.`,
+        `Next follow-up: ${profile.nextAppointmentAt}.`,
+      ],
+      ctaHref: "/sign-up",
+      ctaLabel: "Create patient access",
+    },
+    {
+      eyebrow: "Provider board",
+      title: "A faster care review surface",
+      detail:
+        "The provider flow keeps blockers, adherence context, and drafted follow-up close to the main dashboard.",
+      tone: "warning" as const,
+      points: [
+        providerSummary.adherenceTrend,
+        providerSummary.recommendedAction,
+        `Current review patient: ${patient.name}.`,
+      ],
+      ctaHref: "/sign-in",
+      ctaLabel: "Open provider sign in",
+    },
+  ];
+
+  const launchChecklist = [
+    "Open the landing page and explain the product in under 20 seconds.",
+    "Create or sign in to an account from the hero CTA.",
+    "Show the branded dashboard shell with sidebar and role-wise panels.",
+    "Move through tasks, reminders, messages, and support without changing layout patterns.",
   ];
 
   const websiteSchema = {
@@ -126,7 +133,7 @@ export default function Home() {
     name: appTheme.brand.name,
     url: siteUrl,
     description:
-      "MediConnect is a patient-first specialty medication care coordination MVP with a clean landing page, auth flow, and role-based dashboard.",
+      "MediConnect is a specialty medication care coordination MVP with a refined landing page, authentication flow, and role-aware dashboard workspace.",
   };
 
   const softwareSchema = {
@@ -141,7 +148,7 @@ export default function Home() {
       priceCurrency: "USD",
     },
     description:
-      "MediConnect guides patients and providers from first visit to dashboard with clearer specialty medication coordination.",
+      "MediConnect guides patients and providers through specialty medication onboarding, reminders, and follow-up in one structured interface.",
     url: siteUrl,
   };
 
@@ -160,17 +167,17 @@ export default function Home() {
         <AppNav currentPath="/" />
 
         <main className={themeLayoutClasses.main}>
-          <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+          <section className="grid gap-6 xl:grid-cols-[1.14fr_0.86fr]">
             <div className={themeClassNames.heroCard}>
-              <div className="mb-5 flex flex-wrap gap-3">
-                <StatusPill tone="accent">Landing page first</StatusPill>
-                <StatusPill>Role-aware dashboard after sign-in</StatusPill>
+              <div className="mb-6 flex flex-wrap gap-3">
+                <StatusPill tone="accent">Refined landing page</StatusPill>
+                <StatusPill>Proper dashboard structure</StatusPill>
               </div>
               <h1 className={cx("max-w-4xl", themeClassNames.text.headingHero)}>
-                MediConnect now starts like a real product: landing page, auth flow, then a proper dashboard shell.
+                Specialty care now starts with a clear landing page and ends in a real workspace.
               </h1>
               <p className={cx("mt-5 max-w-3xl", themeClassNames.text.bodyLarge)}>
-                The MVP stays simple for the hackathon. New users learn the product on the landing page, move into sign-in or sign-up, and then enter a branded workspace with a header, sidebar, and role-wise panels.
+                MediConnect now feels like a product, not just a list of routes. New users learn the story first, move into sign-in or sign-up, and then land inside a branded dashboard with a header, sidebar, support access, account controls, and role-wise panels.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/sign-up" className={themeClassNames.primaryButton}>
@@ -181,194 +188,213 @@ export default function Home() {
                 </Link>
               </div>
               <div className="mt-10 grid gap-3 sm:grid-cols-3">
-                {heroStats.map((stat) => (
-                  <div key={stat.label} className={themeClassNames.metricTile}>
-                    <p className={themeClassNames.text.label}>{stat.label}</p>
-                    <p className={cx("mt-3 text-xl font-semibold tracking-[-0.03em] text-[var(--foreground-strong)]")}>
-                      {stat.value}
+                {signalCards.map((item) => (
+                  <div key={item.label} className={themeClassNames.metricTile}>
+                    <p className={themeClassNames.text.label}>{item.label}</p>
+                    <p className={cx("mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--foreground-strong)]")}>
+                      {item.value}
                     </p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{stat.detail}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{item.detail}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <SectionCard
-              eyebrow="Live demo story"
-              title={`${patient.name} begins therapy with ${provider.name}`}
-              description="The first screen should already explain the core product story before the user hits auth."
-            >
+            <section className="space-y-6">
               <div className={themeClassNames.darkPanel}>
-                <p className={themeClassNames.text.onDarkLabel}>Current demo snapshot</p>
-                <p className={cx("mt-3", themeClassNames.text.onDarkHero)}>
-                  {profile.therapyStatus}
+                <p className={themeClassNames.text.onDarkLabel}>Live demo story</p>
+                <h2 className={cx("mt-3", themeClassNames.text.onDarkHero)}>
+                  {patient.name} begins {medication.name} with {provider.name} in one connected flow.
+                </h2>
+                <p className={cx("mt-4", themeClassNames.text.onDarkBody)}>
+                  {profile.therapyStatus}. The new UI keeps preparation, reminders, support, and follow-up aligned inside one product journey.
                 </p>
-                <p className={cx("mt-3", themeClassNames.text.onDarkBody)}>
-                  {patient.name} is preparing for {medication.frequency.toLowerCase()} dosing and needs a cleaner checklist, reminder timing, and a simple way to ask questions.
-                </p>
-              </div>
-              <div className="mt-5 space-y-3">
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Medication</p>
-                  <p className={cx("mt-1", themeClassNames.text.body)}>
-                    {medication.name} · {medication.dosage}
-                  </p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Next appointment</p>
-                  <p className={cx("mt-1", themeClassNames.text.body)}>
-                    {profile.nextAppointmentAt}
-                  </p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Provider summary</p>
-                  <p className={cx("mt-1", themeClassNames.text.body)}>
-                    {providerSummary.adherenceTrend}
-                  </p>
+                <div className="mt-6 grid gap-3">
+                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
+                    <p className={themeClassNames.text.onDarkLabel}>Condition</p>
+                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{profile.condition}</p>
+                  </div>
+                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
+                    <p className={themeClassNames.text.onDarkLabel}>Next visit</p>
+                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{profile.nextAppointmentAt}</p>
+                  </div>
+                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
+                    <p className={themeClassNames.text.onDarkLabel}>Provider signal</p>
+                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{providerSummary.adherenceTrend}</p>
+                  </div>
                 </div>
               </div>
-            </SectionCard>
+
+              <div className={themeClassNames.sidebarCard}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className={themeClassNames.text.eyebrow}>At-a-glance flow</p>
+                    <h2 className={cx("mt-2", themeClassNames.text.headingPanel)}>
+                      First visit to signed-in workspace
+                    </h2>
+                  </div>
+                  <div className={themeClassNames.chip}>3 screens</div>
+                </div>
+                <div className="space-y-3">
+                  <div className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>01 Landing page</p>
+                    <p className={cx("mt-1", themeClassNames.text.body)}>
+                      Explain value, roles, and the care journey before asking the user to log in.
+                    </p>
+                  </div>
+                  <div className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>02 Auth screen</p>
+                    <p className={cx("mt-1", themeClassNames.text.body)}>
+                      Keep sign-in and sign-up short so the form does not carry the whole product story.
+                    </p>
+                  </div>
+                  <div className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>03 Dashboard workspace</p>
+                    <p className={cx("mt-1", themeClassNames.text.body)}>
+                      Open the header, sidebar, account, support, and role-specific modules in one consistent shell.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
           </section>
 
-          <section id="how-it-works" className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] scroll-mt-28">
+          <section id="story" className="grid gap-6 lg:grid-cols-[0.88fr_1.12fr] scroll-mt-28">
             <SectionCard
-              eyebrow="Product structure"
-              title="The app flow is now easier to understand from the first visit"
-              description="This is the order users follow across desktop and mobile."
+              eyebrow="Why this matters"
+              title="The experience now tells a stronger story before any dashboard module opens"
+              description="The landing page is rebuilt to frame the product like a real patient and provider tool."
             >
-              <div className="grid gap-4 md:grid-cols-3">
-                {journeySteps.map((step, index) => (
-                  <div key={step.title} className={themeClassNames.softPanel}>
-                    <div className={themeClassNames.logoBadge}>0{index + 1}</div>
-                    <h2 className={cx("mt-4", themeClassNames.text.headingCard)}>
-                      {step.title}
-                    </h2>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{step.detail}</p>
+              <div className="space-y-3">
+                {storyBlocks.map((block) => (
+                  <div key={block.title} className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>{block.title}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{block.detail}</p>
                   </div>
                 ))}
               </div>
             </SectionCard>
 
             <SectionCard
-              eyebrow="Why it matters"
-              title="The MVP feels more like a guided healthcare product and less like a route list"
-              description="The structure is optimized for a short, understandable hackathon demo."
+              eyebrow="Patient journey"
+              title="A better first-run narrative"
+              description="The landing screen now mirrors the actual demo flow that follows after authentication."
             >
-              <div className="space-y-3">
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Patients get clarity faster</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    The landing page explains the value, while the dashboard keeps next steps, reminders, and support in one place.
-                  </p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Providers get cleaner review surfaces</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    Shared routes stay in place, but the provider role switches the right actions and summaries on sign-in.
-                  </p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>AI stays human-in-the-loop</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    AI prepares explanations, checklists, and drafts while people still make the decisions.
-                  </p>
-                </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {careTasks.slice(0, 2).map((task) => (
+                  <div key={task.id} className={themeClassNames.softPanel}>
+                    <p className={themeClassNames.text.label}>{task.status}</p>
+                    <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>{task.title}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{task.description}</p>
+                  </div>
+                ))}
+                {reminders.slice(0, 2).map((reminder) => (
+                  <div key={reminder.id} className={themeClassNames.softPanel}>
+                    <p className={themeClassNames.text.label}>{reminder.channel}</p>
+                    <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>{reminder.title}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{reminder.window}</p>
+                  </div>
+                ))}
               </div>
             </SectionCard>
           </section>
 
-          <section id="role-panels" className="grid gap-6 xl:grid-cols-2 scroll-mt-28">
-            {roleCards.map((card) => (
+          <section id="roles" className="grid gap-6 xl:grid-cols-2 scroll-mt-28">
+            {roleBoards.map((board) => (
               <SectionCard
-                key={card.title}
-                eyebrow={card.eyebrow}
-                title={card.title}
-                description={card.detail}
+                key={board.title}
+                eyebrow={board.eyebrow}
+                title={board.title}
+                description={board.detail}
               >
-                <div className="mb-5 flex flex-wrap gap-3">
-                  <StatusPill tone={card.tone}>{card.eyebrow}</StatusPill>
+                <div className="mb-5 flex flex-wrap gap-2">
+                  <StatusPill tone={board.tone}>{board.eyebrow}</StatusPill>
                   <StatusPill>Role-wise panel</StatusPill>
                 </div>
                 <div className="space-y-3">
-                  {card.points.map((point) => (
+                  {board.points.map((point) => (
                     <div key={point} className={themeClassNames.subtlePanel}>
                       <p className={themeClassNames.text.body}>{point}</p>
                     </div>
                   ))}
                 </div>
-                <Link href={card.ctaHref} className={cx("mt-5", themeClassNames.primaryButtonCompact)}>
-                  {card.ctaLabel}
+                <Link href={board.ctaHref} className={cx("mt-5", themeClassNames.primaryButtonCompact)}>
+                  {board.ctaLabel}
                 </Link>
               </SectionCard>
             ))}
           </section>
 
-          <section id="dashboard-preview" className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr] scroll-mt-28">
+          <section id="workspace" className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] scroll-mt-28">
             <SectionCard
-              eyebrow="Dashboard preview"
-              title="What users see after sign-in"
-              description="The signed-in experience now has a clearer information hierarchy."
+              eyebrow="Dashboard shell"
+              title="After sign-in, every main component lives inside the sidebar and header structure"
+              description="This is the foundation for dashboard, tasks, reminders, messages, support, account, and role panels."
             >
               <div className="grid gap-3 sm:grid-cols-2">
-                {workspaceModules.map((module) => (
-                  <div key={module.title} className={themeClassNames.softPanel}>
-                    <p className={themeClassNames.text.bodyStrong}>{module.title}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{module.detail}</p>
+                {workspacePanels.map((panel) => (
+                  <div key={panel.title} className={themeClassNames.softPanel}>
+                    <p className={themeClassNames.text.bodyStrong}>{panel.title}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{panel.detail}</p>
                   </div>
                 ))}
               </div>
             </SectionCard>
 
             <SectionCard
-              eyebrow="Sample dashboard content"
-              title="The right panel changes by role"
-              description="This keeps the layout stable while making the content feel tailored."
+              eyebrow="Demo payoff"
+              title="The UI now supports a cleaner walkthrough"
+              description="A stronger shell lets you show more features without the app feeling scattered."
             >
               <div className="space-y-3">
-                {careTasks.slice(0, 2).map((task) => (
-                  <div key={task.id} className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>{task.title}</p>
-                    <p className={cx("mt-1", themeClassNames.text.body)}>{task.description}</p>
-                  </div>
-                ))}
-                {reminders.slice(0, 2).map((reminder) => (
-                  <div key={reminder.id} className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>{reminder.title}</p>
-                    <p className={cx("mt-1", themeClassNames.text.body)}>
-                      {reminder.window} · {reminder.channel}
-                    </p>
-                  </div>
-                ))}
+                <div className={themeClassNames.subtlePanel}>
+                  <p className={themeClassNames.text.bodyStrong}>Navigation stays familiar</p>
+                  <p className={cx("mt-2", themeClassNames.text.body)}>
+                    Support, account, patient tools, provider tools, and shared modules remain in one visible layout.
+                  </p>
+                </div>
+                <div className={themeClassNames.subtlePanel}>
+                  <p className={themeClassNames.text.bodyStrong}>The dashboard becomes the control center</p>
+                  <p className={cx("mt-2", themeClassNames.text.body)}>
+                    Users can move between summary cards, care tasks, reminders, and outreach without losing context.
+                  </p>
+                </div>
+                <div className={themeClassNames.subtlePanel}>
+                  <p className={themeClassNames.text.bodyStrong}>The structure is demo-friendly</p>
+                  <p className={cx("mt-2", themeClassNames.text.body)}>
+                    It is now much easier to explain the app flow live or in a pitch deck.
+                  </p>
+                </div>
               </div>
             </SectionCard>
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+          <section id="launch" className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] scroll-mt-28">
             <SectionCard
-              eyebrow="Final CTA"
-              title="Start from the landing page, then move into auth and the dashboard"
-              description="That sequence gives the product a cleaner and more believable structure."
+              eyebrow="Launch checklist"
+              title="How to demo the refreshed UI"
+              description="Use this sequence to show the new structure clearly."
             >
               <div className="space-y-3">
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.body}>New users should begin with account creation from this page.</p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.body}>Returning users can sign in and land directly in the structured dashboard shell.</p>
-                </div>
+                {launchChecklist.map((item, index) => (
+                  <div key={item} className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.label}>Step 0{index + 1}</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{item}</p>
+                  </div>
+                ))}
               </div>
             </SectionCard>
 
             <div className={themeClassNames.heroCard}>
               <div className="mb-5 flex flex-wrap gap-3">
-                <StatusPill tone="accent">Ready to demo</StatusPill>
+                <StatusPill tone="accent">Ready for the next build</StatusPill>
                 <StatusPill>Desktop and mobile</StatusPill>
               </div>
               <h2 className={themeClassNames.text.headingSection}>
-                Use the new entry flow now.
+                Start from the landing page and move straight into the new workspace.
               </h2>
-              <p className={cx("mt-4", themeClassNames.text.bodyLarge)}>
-                Open sign-up for the first-time story, or sign in to test the new dashboard structure with the branded header, sidebar, and role-wise panel layout.
+              <p className={cx("mt-4 max-w-2xl", themeClassNames.text.bodyLarge)}>
+                The whole experience is now better sequenced: a refined landing page, focused sign-in and sign-up screens, then a structured post-login dashboard with sidebar navigation, support access, account controls, and role-aware panels.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/sign-up" className={themeClassNames.primaryButton}>

@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 };
 
 const countCards = [
-  { key: "taskCount", label: "Tasks", hint: "Open checklist items" },
-  { key: "adherenceCount", label: "Adherence", hint: "Check-ins and dose status" },
+  { key: "taskCount", label: "Tasks", hint: "Checklist items in motion" },
+  { key: "adherenceCount", label: "Adherence", hint: "Dose events and check-ins" },
   { key: "reminderCount", label: "Reminders", hint: "Upcoming nudges and refill timing" },
-  { key: "messageCount", label: "Messages", hint: "Drafts and follow-up notes" },
+  { key: "messageCount", label: "Messages", hint: "Open drafts and follow-up notes" },
 ] as const;
 
 export default async function DashboardPage() {
@@ -29,104 +29,118 @@ export default async function DashboardPage() {
   ]);
 
   const firstName = context.fullName.split(" ")[0] ?? context.fullName;
-  const demoProfile = patientJourney.profile;
-  const dashboardCopy =
+  const dashboardContent =
     context.role === "provider"
       ? {
-          eyebrow: "Provider dashboard",
+          eyebrow: "Provider control center",
           title: `Welcome back, ${firstName}`,
           description:
-            "Review the patient story quickly, use AI to summarize the context, and move into the right follow-up action from one workspace.",
+            "Use this dashboard to review blockers, move through shared modules, and take the next provider action without losing context.",
           tone: "warning" as const,
-          highlightTitle: "Provider review panel",
-          highlightBody: patientJourney.providerSummary.note,
-          bullets: patientJourney.providerSummary.blockers,
+          heroPoints: patientJourney.providerSummary.blockers,
           quickLinks: [
             { href: "/ai-insights", label: "Open AI insights" },
-            { href: "/messages", label: "Review message drafts" },
+            { href: "/messages", label: "Review messages" },
             { href: "/prior-auth", label: "Check care review" },
           ],
-          detailTitle: "Recommended next action",
-          detailItems: [
-            patientJourney.providerSummary.recommendedAction,
+          laneTitle: "Provider panel",
+          laneDescription: patientJourney.providerSummary.recommendedAction,
+          laneItems: [
             patientJourney.providerSummary.adherenceTrend,
-            `Current demo patient: ${patientJourney.patient.name}`,
+            patientJourney.providerSummary.note,
+            `Assigned patient: ${patientJourney.patient.name}`,
           ],
         }
       : {
-          eyebrow: "Patient dashboard",
+          eyebrow: "Patient control center",
           title: `Welcome back, ${firstName}`,
           description:
-            "Your dashboard keeps medication tasks, reminders, support, and questions in one calm place so the next step is always obvious.",
+            "Your dashboard keeps medication guidance, reminders, support, and message drafts together so the next step stays obvious.",
           tone: "accent" as const,
-          highlightTitle: "Patient next-step panel",
-          highlightBody: patientJourney.aiInsights[0]?.summary,
-          bullets: patientJourney.careTasks.slice(0, 3).map((task) => task.title),
+          heroPoints: patientJourney.careTasks.slice(0, 3).map((task) => task.title),
           quickLinks: [
             { href: "/tasks", label: "Open tasks" },
-            { href: "/reminders", label: "View reminders" },
-            { href: "/support", label: "Ask for support" },
+            { href: "/support", label: "Ask support" },
+            { href: "/reminders", label: "Review reminders" },
           ],
-          detailTitle: "Prepared for this week",
-          detailItems: [
+          laneTitle: "Patient panel",
+          laneDescription: patientJourney.aiInsights[0]?.summary ?? "Review your next medication steps in plain language.",
+          laneItems: [
             patientJourney.messageDraft.subject,
             `${patientJourney.medication.name} refill due in ${patientJourney.medication.refillDueInDays} days`,
             `Next visit: ${patientJourney.profile.nextAppointmentAt}`,
           ],
         };
 
-  const dashboardModules = [
+  const moduleLinks = [
     {
       href: "/tasks",
       title: "Tasks",
-      detail: "Checklist actions for onboarding, follow-up, and blockers.",
+      detail: "Checklist actions for onboarding, review, and missing information.",
     },
     {
       href: "/adherence",
       title: "Adherence",
-      detail: "Dose status, check-ins, and follow-up notes in one stream.",
+      detail: "Track dose status and note changes without leaving the shell.",
     },
     {
       href: "/reminders",
       title: "Reminders",
-      detail: "Review the upcoming reminders that keep the user on track.",
+      detail: "Keep refill timing and notifications visible in one place.",
     },
     {
       href: "/messages",
       title: "Messages",
-      detail: "Draft or review patient and provider outreach from one page.",
+      detail: "Review or draft patient and provider follow-up quickly.",
+    },
+    {
+      href: "/support",
+      title: "Support",
+      detail: "Ask the assistant to explain the next step in plain language.",
+    },
+    {
+      href: "/account",
+      title: "Account",
+      detail: "Open user details and session controls from the same workspace.",
     },
   ];
 
   return (
     <PostLoginShell currentPath="/dashboard">
-      <section className="grid gap-6 lg:grid-cols-[1.16fr_0.84fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
         <SectionCard
           className={themeClassNames.heroSectionCard}
-          eyebrow={dashboardCopy.eyebrow}
-          title={dashboardCopy.title}
-          description={dashboardCopy.description}
+          eyebrow={dashboardContent.eyebrow}
+          title={dashboardContent.title}
+          description={dashboardContent.description}
         >
           <div className="mb-6 flex flex-wrap gap-2">
-            <StatusPill tone={dashboardCopy.tone}>{context.role} mode</StatusPill>
-            <StatusPill>Structured dashboard shell</StatusPill>
+            <StatusPill tone={dashboardContent.tone}>{context.role} mode</StatusPill>
+            <StatusPill>Unified dashboard shell</StatusPill>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
-            {dashboardCopy.quickLinks.map((link) => (
+            {dashboardContent.quickLinks.map((link) => (
               <Link key={link.href} href={link.href} className={themeClassNames.secondaryButtonCompact}>
                 {link.label}
               </Link>
             ))}
           </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {dashboardContent.heroPoints.map((point) => (
+              <div key={point} className={themeClassNames.softPanel}>
+                <p className={themeClassNames.text.body}>{point}</p>
+              </div>
+            ))}
+          </div>
         </SectionCard>
 
         <SectionCard
-          eyebrow="Role-wise panel"
-          title={dashboardCopy.highlightTitle}
-          description={dashboardCopy.highlightBody}
+          eyebrow="Role-wise lane"
+          title={dashboardContent.laneTitle}
+          description={dashboardContent.laneDescription}
         >
           <div className="space-y-3">
-            {dashboardCopy.bullets.map((item) => (
+            {dashboardContent.laneItems.map((item) => (
               <div key={item} className={themeClassNames.subtlePanel}>
                 <p className={themeClassNames.text.body}>{item}</p>
               </div>
@@ -147,14 +161,14 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
         <SectionCard
-          eyebrow="Core modules"
-          title="Open the main dashboard routes from one place"
-          description="These are the first pages the demo should highlight after sign-in."
+          eyebrow="Workspace modules"
+          title="Every main component is now reachable from the same dashboard shell"
+          description="Use the sidebar or these content cards to move through the app quickly."
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            {dashboardModules.map((module) => (
+            {moduleLinks.map((module) => (
               <Link key={module.href} href={module.href} className={themeClassNames.softPanel}>
                 <p className={themeClassNames.text.bodyStrong}>{module.title}</p>
                 <p className={cx("mt-2", themeClassNames.text.body)}>{module.detail}</p>
@@ -165,13 +179,14 @@ export default async function DashboardPage() {
 
         <SectionCard
           eyebrow="This week"
-          title={dashboardCopy.detailTitle}
-          description="Keep the most useful role-specific callouts visible on the main dashboard."
+          title="Care timeline snapshot"
+          description="Keep the dashboard focused on the immediate story, not every possible workflow."
         >
           <div className="space-y-3">
-            {dashboardCopy.detailItems.map((item) => (
-              <div key={item} className={themeClassNames.subtlePanel}>
-                <p className={themeClassNames.text.body}>{item}</p>
+            {patientJourney.timeline.map((item) => (
+              <div key={item.label} className={themeClassNames.subtlePanel}>
+                <p className={themeClassNames.text.bodyStrong}>{item.label}</p>
+                <p className={cx("mt-2", themeClassNames.text.body)}>{item.detail}</p>
               </div>
             ))}
           </div>
@@ -181,7 +196,7 @@ export default async function DashboardPage() {
       {profile ? (
         <section className="grid gap-6 lg:grid-cols-[1.06fr_0.94fr]">
           <SectionCard
-            eyebrow="Live patient status"
+            eyebrow="Live profile"
             title={profile.condition_name}
             description={`Therapy status: ${profile.therapy_status}`}
           >
@@ -204,7 +219,7 @@ export default async function DashboardPage() {
           </SectionCard>
 
           <SectionCard
-            eyebrow="Demo story"
+            eyebrow="Medication notes"
             title={patientJourney.medication.name}
             description={patientJourney.medication.instructions}
           >
@@ -230,21 +245,6 @@ export default async function DashboardPage() {
           ctaLabel="Open account settings"
         />
       )}
-
-      <SectionCard
-        eyebrow="Demo snapshot"
-        title={`${demoProfile.condition} journey`}
-        description="Mock data still powers the main story while the dashboard structure gets cleaner."
-      >
-        <div className="grid gap-3 sm:grid-cols-3">
-          {patientJourney.timeline.map((item) => (
-            <div key={item.label} className={themeClassNames.softPanel}>
-              <p className={themeClassNames.text.bodyStrong}>{item.label}</p>
-              <p className={cx("mt-2", themeClassNames.text.body)}>{item.detail}</p>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
     </PostLoginShell>
   );
 }
