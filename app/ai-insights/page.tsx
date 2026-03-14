@@ -15,9 +15,9 @@ export default async function AiInsightsPage() {
     <PostLoginShell currentPath="/ai-insights">
       <ModuleOverview
         roleMode={context.role}
-        eyebrow="Advanced AI Baseline"
-        title="Risk Scoring and Recommendation APIs"
-        description="Non-autonomous AI risk endpoints provide explainable scores with required human approval."
+        eyebrow="AI guidance layer"
+        title="AI insights and follow-up suggestions"
+        description="This screen turns adherence signals and patient context into explainable summaries, highlighted risks, and human-reviewed next-step suggestions."
         apiRoutes={[
           "/api/ai/risk/adverse-event",
           "/api/ai/risk/adherence",
@@ -26,12 +26,11 @@ export default async function AiInsightsPage() {
           "/api/iot/events",
         ]}
         points={[
-          "Predictions store score, level, explanation payload, and human-approval marker.",
-          "IoT module currently provides schema + ingestion scaffolding without live devices.",
-          "Clinical decisions remain human-controlled.",
+          "Summaries surface what changed without forcing the user to read raw records.",
+          "Risk flags stay explainable so providers can review them before acting.",
+          "Recommendations help draft the next move, but people still make the final decision.",
         ]}
       />
     </PostLoginShell>
   );
 }
-

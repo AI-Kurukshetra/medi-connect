@@ -25,10 +25,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   background-image:
-    radial-gradient(circle at 0% 0%, var(--glow-top-left), transparent 28%),
-    radial-gradient(circle at 100% 0%, var(--glow-top-right), transparent 26%),
-    radial-gradient(circle at 50% 100%, var(--glow-bottom), transparent 32%),
-    linear-gradient(180deg, var(--background-warm) -8%, var(--background) 38%, var(--background-cool) 100%);
+    radial-gradient(circle at 0% 0%, var(--glow-top-left), transparent 26%),
+    radial-gradient(circle at 100% 4%, var(--glow-top-right), transparent 24%),
+    radial-gradient(circle at 50% 100%, var(--glow-bottom), transparent 30%),
+    linear-gradient(180deg, var(--background-warm) 0%, var(--background) 42%, var(--background-cool) 100%);
   font-family: var(--font-geist-sans), sans-serif;
 }
 
@@ -40,9 +40,9 @@ body::before {
   background-image:
     linear-gradient(var(--grid-line-light) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line-light) 1px, transparent 1px);
-  background-size: 34px 34px;
+  background-size: 36px 36px;
   mask-image: linear-gradient(180deg, white, transparent 88%);
-  opacity: 0.45;
+  opacity: 0.18;
 }
 
 body::after {
@@ -51,9 +51,9 @@ body::after {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.5), transparent 18%),
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.36), transparent 16%);
-  opacity: 0.7;
+    radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.8), transparent 16%),
+    radial-gradient(circle at 84% 14%, rgba(176, 205, 255, 0.34), transparent 18%);
+  opacity: 0.9;
 }
 
 
@@ -81,24 +81,26 @@ textarea {
   border: 1px solid var(--card-border);
   background: var(--card);
   box-shadow:
-    0 20px 70px -44px var(--shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
-  backdrop-filter: blur(16px);
+    0 18px 48px -34px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
 }
 
 .surface-card-strong {
   border: 1px solid var(--card-border-strong);
   background: var(--card-strong);
   box-shadow:
-    0 24px 80px -48px var(--shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    0 22px 54px -38px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(18px);
 }
 
 .metric-tile {
   border: 1px solid var(--card-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), var(--card-subtle));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1), var(--card-subtle));
+  box-shadow:
+    0 14px 30px -24px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .spotlight-panel {
@@ -111,7 +113,7 @@ textarea {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.34), transparent 22%),
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.5), transparent 22%),
     radial-gradient(circle at 88% 10%, var(--accent-glow), transparent 28%);
 }
 
@@ -188,7 +190,7 @@ textarea {
 
 .theme-link {
   color: var(--foreground-strong);
-  text-decoration-color: rgba(19, 38, 45, 0.18);
+  text-decoration-color: rgba(51, 102, 255, 0.24);
 }
 
 .theme-link:hover {
@@ -213,9 +215,11 @@ textarea {
 
 .theme-button-secondary {
   border: 1px solid var(--card-border-strong);
-  background: rgba(255, 250, 243, 0.88);
+  background: rgba(255, 255, 255, 0.96);
   color: var(--foreground-strong);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 12px 28px -24px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .theme-button-secondary:hover {
@@ -223,14 +227,14 @@ textarea {
 }
 
 .theme-nav-link {
-  border: 1px solid transparent;
-  background: rgba(255, 249, 242, 0.72);
+  border: 1px solid rgba(51, 102, 255, 0.08);
+  background: rgba(255, 255, 255, 0.84);
   color: var(--foreground);
 }
 
 .theme-nav-link:hover {
   border-color: var(--card-border);
-  background: rgba(255, 252, 248, 0.94);
+  background: rgba(255, 255, 255, 1);
 }
 
 .theme-nav-link-active {
@@ -240,32 +244,32 @@ textarea {
 }
 
 .theme-sidebar-link {
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid rgba(51, 102, 255, 0.06);
+  background: rgba(247, 249, 255, 0.72);
   color: var(--foreground-strong);
 }
 
 .theme-sidebar-link:hover {
   border-color: var(--card-border);
-  background: rgba(255, 249, 242, 0.6);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .theme-sidebar-link-active {
   border-color: transparent;
-  background: linear-gradient(145deg, rgba(25, 75, 85, 0.95), rgba(17, 57, 65, 0.95));
+  background: linear-gradient(145deg, rgba(51, 102, 255, 0.98), rgba(41, 84, 235, 0.98));
   color: var(--brand-contrast);
   box-shadow: 0 18px 40px -28px var(--shadow-strong);
 }
 
 .theme-chip-muted {
-  border: 1px solid rgba(19, 38, 45, 0.08);
-  background: rgba(255, 249, 242, 0.66);
+  border: 1px solid rgba(51, 102, 255, 0.12);
+  background: rgba(247, 249, 255, 0.88);
   color: var(--muted);
 }
 
 .theme-subtle-panel {
   border: 1px solid var(--card-border);
-  background: rgba(249, 241, 233, 0.78);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .theme-soft-panel {
@@ -298,7 +302,7 @@ textarea {
 
 .theme-segmented {
   border: 1px solid var(--card-border);
-  background: rgba(249, 241, 233, 0.74);
+  background: rgba(247, 249, 255, 0.84);
 }
 
 .theme-segmented-option {
@@ -306,7 +310,7 @@ textarea {
 }
 
 .theme-segmented-option:hover {
-  background: rgba(255, 252, 247, 0.94);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .theme-segmented-option-active {
@@ -338,7 +342,7 @@ textarea {
 
 .theme-status-neutral {
   border-color: var(--card-border);
-  background: rgba(255, 249, 242, 0.72);
+  background: rgba(255, 255, 255, 0.88);
   color: var(--foreground);
 }
 

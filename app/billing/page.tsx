@@ -20,29 +20,28 @@ export default async function BillingPage() {
         <RoleAwareEmptyState
           roleMode={context.role}
           title="No billing scope available"
-          description="Billing and payment records require a scoped patient profile."
+          description="Payment and billing details require a scoped patient profile before this route can show meaningful content."
           ctaHref="/dashboard"
           ctaLabel="Back to dashboard"
         />
       ) : (
         <ModuleOverview
           roleMode={context.role}
-          eyebrow="Revenue Layer"
-          title="Invoices and Payment Reconciliation"
-          description="Billing APIs provide draft-to-paid invoice lifecycle and payment reconciliation."
+          eyebrow="Coverage and payment"
+          title="Billing snapshot and payment status"
+          description="This page keeps invoice progress, payment activity, and reimbursement follow-up inside the same dashboard experience."
           apiRoutes={[
             "/api/billing/invoices",
             "/api/billing/payments",
             "/api/billing/payments/:id/reconcile",
           ]}
           points={[
-            "Stripe-compatible mock provider references are generated in payment flow.",
-            "Reconciliation path moves payments to reconciled status for accounting consistency.",
-            "Role-based access protects patient and provider views on financial records.",
+            "Patients can understand payment state without leaving the care flow.",
+            "Providers can review billing status alongside the rest of the care journey.",
+            "The route stays lightweight enough for demo storytelling instead of finance complexity.",
           ]}
         />
       )}
     </PostLoginShell>
   );
 }
-

@@ -15,21 +15,20 @@ export default async function OperationsPage() {
     <PostLoginShell currentPath="/operations">
       <ModuleOverview
         roleMode={context.role}
-        eyebrow="Operations Layer"
-        title="Inventory and Shipment Tracking"
-        description="Supply chain foundation tracks lot status, cold-chain signals, and delivery event timelines."
+        eyebrow="Medication journey ops"
+        title="Inventory and shipment support"
+        description="This screen frames delivery status and operational milestones as supporting context for the medication journey, not a separate back-office product."
         apiRoutes={[
           "/api/operations/inventory",
           "/api/operations/shipments",
           "/api/operations/shipments/:id/events",
         ]}
         points={[
-          "Inventory supports lot/location/cold-chain and availability states.",
-          "Shipments support tracking milestones and delivery outcomes.",
-          "Logistics adapter supports mock and live provider contracts.",
+          "Providers can quickly reference delivery context while reviewing the patient journey.",
+          "Operational events stay understandable enough for a live demo narrative.",
+          "The route supports the specialty medication story without expanding into enterprise sprawl.",
         ]}
       />
     </PostLoginShell>
   );
 }
-

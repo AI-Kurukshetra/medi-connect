@@ -1,69 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { StatusPill } from "@/components/status-pill";
-import { appTheme, cx, themeClassNames, themeLayoutClasses } from "@/theme";
+import { appTheme, cx, themeLayoutClasses } from "@/theme";
 
 type AuthMode = "sign-in" | "sign-up";
 
-const authContent = {
+const shellCopy = {
   "sign-in": {
-    pill: "Step 2 of 3",
-    title: "Sign in and jump back into your care workspace.",
-    description:
-      "The landing page explains the product. This screen gets the user into the correct role-based dashboard with the fewest possible steps.",
-    helperTitle: "What opens after sign in",
-    helperPoints: [
-      "Patients land on a simple dashboard with next steps, reminders, and support actions.",
-      "Providers open the same workspace with review panels, blockers, and follow-up actions.",
-      "Shared routes keep the demo easy to navigate on desktop and mobile.",
-    ],
-    flow: [
-      "Confirm account access",
-      "Open the shared dashboard shell",
-      "Continue role-based care actions",
-    ],
-    metrics: [
-      {
-        label: "Auth style",
-        value: "Fast",
-        detail: "Email and password only for the MVP demo.",
-      },
-      {
-        label: "Next page",
-        value: "Dashboard",
-        detail: "Every successful sign-in routes into the structured workspace.",
-      },
-    ],
+    switchHref: "/sign-up",
+    switchLabel: "Create account",
+    footerNote: "Secure access for patients and providers",
   },
   "sign-up": {
-    pill: "Step 2 of 3",
-    title: "Create an account, choose your role, and enter the app.",
-    description:
-      "Registration stays intentionally small so the product story happens on the landing page and the real action starts inside the dashboard.",
-    helperTitle: "What opens after sign up",
-    helperPoints: [
-      "Patients start with a calmer therapy dashboard focused on what happens next.",
-      "Providers get a review workspace with care status, AI summaries, and outreach actions.",
-      "One shared shell keeps the product feeling consistent across roles.",
-    ],
-    flow: [
-      "Create your account",
-      "Pick patient or provider",
-      "Enter the shared dashboard shell",
-    ],
-    metrics: [
-      {
-        label: "Required info",
-        value: "Minimal",
-        detail: "Name, role, email, and password only.",
-      },
-      {
-        label: "User journey",
-        value: "Landing -> Auth -> Dashboard",
-        detail: "The full structure is visible from the first screen onward.",
-      },
-    ],
+    switchHref: "/sign-in",
+    switchLabel: "Sign in",
+    footerNote: "Simple onboarding into the shared care workspace",
   },
 } as const;
 
@@ -73,122 +24,60 @@ interface AuthShellProps {
 }
 
 export function AuthShell({ mode, children }: AuthShellProps) {
-  const content = authContent[mode];
+  const content = shellCopy[mode];
 
   return (
     <main className={`auth-stage min-h-screen ${themeLayoutClasses.pageFrame}`}>
-      <div className={themeLayoutClasses.container}>
-        <header className={themeClassNames.headerCard}>
+      <div className={cx(themeLayoutClasses.container, "flex min-h-[calc(100vh-2.5rem)] flex-col")}>
+        <header className="flex items-center justify-between gap-4 py-3">
           <Link href="/" className="flex items-center gap-3">
-            <div className={themeClassNames.logoBadge}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[rgba(51,102,255,0.1)]">
               <Image
                 src="/logo.png"
                 alt={`${appTheme.brand.name} logo`}
                 width={40}
                 height={40}
-                className="h-10 w-10 rounded-xl object-cover"
+                className="h-9 w-9 rounded-[12px] object-cover"
                 priority
               />
             </div>
             <div>
-              <p className={themeClassNames.text.eyebrow}>{appTheme.brand.name}</p>
-              <p className={cx("text-sm", themeClassNames.text.body)}>
-                {appTheme.brand.tagline}
+              <p className="text-sm font-semibold tracking-[-0.02em] text-[var(--foreground-strong)]">
+                {appTheme.brand.name}
               </p>
+              <p className="text-xs text-[var(--muted)]">{content.footerNote}</p>
             </div>
           </Link>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/" className={themeClassNames.navLink}>
-              Back to landing
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="hidden text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground-strong)] sm:inline-flex"
+            >
+              Back to home
             </Link>
             <Link
-              href="/sign-in"
-              className={
-                mode === "sign-in"
-                  ? themeClassNames.navLinkActive
-                  : themeClassNames.navLink
-              }
+              href={content.switchHref}
+              className="inline-flex h-10 items-center justify-center rounded-[12px] bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-contrast)] transition hover:bg-[var(--brand-deep)]"
             >
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
-              className={
-                mode === "sign-up"
-                  ? themeClassNames.navLinkActive
-                  : themeClassNames.navLink
-              }
-            >
-              Create account
+              {content.switchLabel}
             </Link>
           </div>
         </header>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          <StatusPill tone="accent">Landing page first</StatusPill>
-          <StatusPill>{content.pill}</StatusPill>
-          <StatusPill>Role-based dashboard next</StatusPill>
+        <div className="flex flex-1 items-center justify-center py-8 sm:py-12">
+          <div className="w-full max-w-[480px]">{children}</div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className={themeClassNames.authCard}>{children}</section>
-
-          <section className="space-y-6">
-            <div className={themeClassNames.heroCard}>
-              <div className="mb-5 flex flex-wrap gap-3">
-                <StatusPill tone="accent">Structured auth flow</StatusPill>
-                <StatusPill>Mobile-ready</StatusPill>
-              </div>
-              <h1 className={cx("max-w-3xl", themeClassNames.text.headingHero)}>
-                {content.title}
-              </h1>
-              <p className={cx("mt-5 max-w-2xl", themeClassNames.text.bodyLarge)}>
-                {content.description}
-              </p>
-
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {content.metrics.map((metric) => (
-                  <div key={metric.label} className={themeClassNames.metricTile}>
-                    <p className={themeClassNames.text.label}>{metric.label}</p>
-                    <p className={cx("mt-3", themeClassNames.text.headingMetric)}>
-                      {metric.value}
-                    </p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>
-                      {metric.detail}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className={themeClassNames.authInfoCard}>
-                <p className={themeClassNames.text.eyebrow}>{content.helperTitle}</p>
-                <div className="mt-4 space-y-3">
-                  {content.helperPoints.map((point) => (
-                    <div key={point} className={themeClassNames.subtlePanel}>
-                      <p className={themeClassNames.text.body}>{point}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={themeClassNames.authInfoCard}>
-                <p className={themeClassNames.text.eyebrow}>Flow check</p>
-                <div className="mt-4 space-y-3">
-                  {content.flow.map((step, index) => (
-                    <div key={step} className={themeClassNames.subtlePanel}>
-                      <p className={themeClassNames.text.label}>Step 0{index + 1}</p>
-                      <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>
-                        {step}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <footer className="pb-3 pt-2 text-center text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
+          <div className="flex items-center justify-center gap-3">
+            <span>Privacy Policy</span>
+            <span className="h-1 w-1 rounded-full bg-[rgba(115,128,156,0.4)]" />
+            <span>Terms of Service</span>
+            <span className="h-1 w-1 rounded-full bg-[rgba(115,128,156,0.4)]" />
+            <span>Help Center</span>
+          </div>
+        </footer>
       </div>
     </main>
   );

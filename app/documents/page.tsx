@@ -15,21 +15,20 @@ export default async function DocumentsPage() {
     <PostLoginShell currentPath="/documents">
       <ModuleOverview
         roleMode={context.role}
-        eyebrow="Clinical Docs"
-        title="Secure Document Management"
-        description="Versioned document records with sharing controls and signed URL download contracts."
+        eyebrow="Care documents"
+        title="Document vault and shared materials"
+        description="Education packets, shared files, and uploaded documents now sit inside the same workspace as reminders, messages, and support."
         apiRoutes={[
           "/api/documents",
           "/api/documents/:id",
           "/api/documents/:id/share",
         ]}
         points={[
-          "Versioning support is built into the document model.",
-          "Document share permissions include view/edit and expiry.",
-          "All document mutations emit audit events for traceability.",
+          "Patients can find what they need without hunting through multiple screens.",
+          "Providers can share updated materials while staying in the same shell.",
+          "The UI frames document actions as part of care coordination, not file management clutter.",
         ]}
       />
     </PostLoginShell>
   );
 }
-

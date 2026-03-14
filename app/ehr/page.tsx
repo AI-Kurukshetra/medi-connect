@@ -15,21 +15,20 @@ export default async function EhrPage() {
     <PostLoginShell currentPath="/ehr">
       <ModuleOverview
         roleMode={context.role}
-        eyebrow="Clinical Interop"
-        title="EHR and FHIR Hybrid Integration"
-        description="FHIR R4 resource sync and custom JSON workflows are unified behind role-aware APIs."
+        eyebrow="Connected records"
+        title="EHR summary and sync view"
+        description="This page summarizes connected patient records and care-plan sync activity without making the product feel like a complex interoperability tool."
         apiRoutes={[
           "/api/ehr/links",
           "/api/ehr/sync-jobs",
           "/api/ehr/patient-summary",
         ]}
         points={[
-          "FHIR R4 resources supported: Patient, Practitioner, MedicationRequest, CarePlan, Observation, DocumentReference.",
-          "Idempotent sync-job model with queued/running/succeeded/failed states.",
-          "Mock-first integration adapters with live connector contract compatibility.",
+          "Providers can reference connected clinical context while staying in the care workspace.",
+          "The UI keeps EHR data framed as supporting context, not the main product story.",
+          "Mock-first connectors still map cleanly to live integrations later if needed.",
         ]}
       />
     </PostLoginShell>
   );
 }
-

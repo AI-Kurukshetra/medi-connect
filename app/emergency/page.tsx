@@ -20,29 +20,28 @@ export default async function EmergencyPage() {
         <RoleAwareEmptyState
           roleMode={context.role}
           title="No emergency scope available"
-          description="Emergency contacts and incidents require a scoped patient profile."
+          description="Emergency contacts and escalation actions require a scoped patient profile before this route can activate."
           ctaHref="/dashboard"
           ctaLabel="Back to dashboard"
         />
       ) : (
         <ModuleOverview
           roleMode={context.role}
-          eyebrow="Safety Controls"
-          title="Emergency Contacts and Escalation Incidents"
-          description="Severity-based escalation workflow with SLA markers and acknowledgements."
+          eyebrow="Urgent escalation"
+          title="Emergency contacts and safety escalation"
+          description="This route keeps urgent contacts, incident history, and escalation actions available without breaking the rest of the care workflow."
           apiRoutes={[
             "/api/emergency/contacts",
             "/api/emergency/incidents",
             "/api/emergency/incidents/:id/escalate",
           ]}
           points={[
-            "Incident states: open -> acknowledged -> escalated -> closed.",
-            "Support flow can automatically create high-severity incidents.",
-            "Notification adapter supports escalation dispatch contracts.",
+            "Patients can understand where urgent help lives inside the product.",
+            "Providers can escalate faster while staying inside the same dashboard shell.",
+            "The experience highlights urgency without turning the UI into an operations console.",
           ]}
         />
       )}
     </PostLoginShell>
   );
 }
-

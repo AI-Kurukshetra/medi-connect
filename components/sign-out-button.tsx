@@ -1,11 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cx, themeClassNames } from "@/theme";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  className?: string;
+  children?: ReactNode;
+}
+
+export function SignOutButton({ className, children }: SignOutButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -26,10 +32,9 @@ export function SignOutButton() {
       type="button"
       onClick={handleSignOut}
       disabled={isPending}
-      className={cx(themeClassNames.secondaryButtonCompact)}
+      className={cx(themeClassNames.secondaryButtonCompact, className)}
     >
-      {isPending ? "Signing out..." : "Sign out"}
+      {isPending ? "Signing out..." : children ?? "Sign out"}
     </button>
   );
 }
-
