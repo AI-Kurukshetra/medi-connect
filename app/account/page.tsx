@@ -96,12 +96,12 @@ export default async function AccountPage() {
                   {profile.condition_name}
                 </p>
               ) : null}
-              <button
+              {/* <button
                 type="button"
                 className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-slate-100 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200"
               >
                 Edit Photo
-              </button>
+              </button> */}
             </div>
           </section>
 
@@ -153,7 +153,7 @@ export default async function AccountPage() {
               </div>
             </AccountCard>
 
-            <div className="flex flex-wrap justify-end gap-3 pt-2">
+            {/* <div className="flex flex-wrap justify-end gap-3 pt-2">
               <button
                 type="button"
                 className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
@@ -166,7 +166,7 @@ export default async function AccountPage() {
               >
                 Save Changes
               </button>
-            </div>
+            </div> */}
 
             <section className="rounded-[18px] border border-red-100 bg-red-50 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

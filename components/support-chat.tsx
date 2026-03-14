@@ -1,21 +1,91 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
-import { StatusPill } from "@/components/status-pill";
-import { cx, themeClassNames } from "@/theme";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { cx } from "@/theme";
+
+interface Message {
+  id: string;
+  role: "user" | "assistant" | "error";
+  content: string;
+  timestamp: Date;
+}
 
 interface SupportChatProps {
   roleMode: "patient" | "provider";
 }
 
-export function SupportChat({ roleMode }: SupportChatProps) {
-  const [message, setMessage] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+const SUGGESTED_PROMPTS = [
+  "What should I do before my next injection?",
+  "How do I log my medication in the portal?",
+  "Explain my current therapy status.",
+  "How do I message my provider?",
+  "What happens if I miss a dose?",
+  "Where do I find my reminders?",
+];
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!message.trim()) return;
+function formatTime(date: Date) {
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+export function SupportChat({ roleMode }: SupportChatProps) {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        roleMode === "provider"
+          ? "Hi! I'm your MediConnect support assistant. I can help with workflow questions, patient summaries, or how to navigate the portal. What do you need?"
+          : "Hi! I'm your MediConnect support assistant. I can help you understand your medication journey, tasks, reminders, and how to use the portal. What would you like to know?",
+      timestamp: new Date(),
+    },
+  ]);
+  const [isPending, startTransition] = useTransition();
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const thinkingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const THINKING_STEPS = [
+    "Agent is thinking…",
+    "Searching knowledge base…",
+    "Reading your context…",
+    "Composing a response…",
+    "Almost ready…",
+  ];
+
+  useEffect(() => {
+    if (isPending) {
+      setThinkingStep(0);
+      thinkingTimerRef.current = setInterval(() => {
+        setThinkingStep((s) => (s + 1) % THINKING_STEPS.length);
+      }, 1400);
+    } else {
+      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+    }
+    return () => {
+      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isPending]);
+
+  function sendMessage(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || isPending) return;
+
+    const userMsg: Message = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      content: trimmed,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
 
     startTransition(() => {
       void (async () => {
@@ -23,83 +93,224 @@ export function SupportChat({ roleMode }: SupportChatProps) {
           const response = await fetch("/api/support/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message,
-              module: "support",
-            }),
+            body: JSON.stringify({ message: trimmed, module: "support" }),
           });
           const data = (await response.json()) as {
             data?: { answer?: string };
             error?: string;
           };
 
-          if (!response.ok) {
-            setAnswer(data.error ?? "Support bot is unavailable right now.");
-            return;
-          }
+          const content = !response.ok
+            ? (data.error ?? "Support bot is unavailable right now.")
+            : (data.data?.answer ?? "I didn't get a response. Please try again.");
 
-          setAnswer(data.data?.answer ?? "No response");
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `a-${Date.now()}`,
+              role: !response.ok ? "error" : "assistant",
+              content,
+              timestamp: new Date(),
+            },
+          ]);
         } catch {
-          setAnswer("Support bot is unavailable right now. Please try again.");
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `e-${Date.now()}`,
+              role: "error",
+              content: "Support bot is unavailable right now. Please try again.",
+              timestamp: new Date(),
+            },
+          ]);
         }
       })();
     });
-  };
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
-        <StatusPill tone="accent">AI support active</StatusPill>
-        <StatusPill>Gemini</StatusPill>
-        <StatusPill>{roleMode} mode</StatusPill>
+    <div
+      className="flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-[0_8px_32px_-12px_rgba(15,23,42,0.12)]"
+      style={{ height: "620px" }}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#101a33,#1e3069)] px-5 py-4 shrink-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"
+              fill="rgba(255,255,255,0.2)"
+              stroke="white"
+              strokeWidth="1.4"
+            />
+            <path d="M8 10h8M8 14h5" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white">MediConnect Support</p>
+          <p className="text-[11px] text-blue-200">AI assistant · {roleMode} mode</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">Online</span>
+        </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className={themeClassNames.softPanel}>
-          <p className={themeClassNames.text.bodyStrong}>What to ask here</p>
-          <p className={cx("mt-2", themeClassNames.text.body)}>
-            Ask about your next step, how to use a MediConnect screen, reminders, messages, or how to contact the care team.
+      {/* Suggested prompts — only shown before any user message */}
+      {messages.length === 1 && (
+        <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 shrink-0">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+            Suggested questions
           </p>
+          <div className="flex flex-wrap gap-1.5">
+            {SUGGESTED_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => sendMessage(prompt)}
+                disabled={isPending}
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className={themeClassNames.softPanel}>
-          <p className={themeClassNames.text.bodyStrong}>How the assistant behaves</p>
-          <p className={cx("mt-2", themeClassNames.text.body)}>
-            The assistant explains and drafts. It does not diagnose or make clinical decisions.
-          </p>
-        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-[#f8faff]">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={cx(
+              "flex gap-3",
+              msg.role === "user" ? "flex-row-reverse" : "flex-row",
+            )}
+          >
+            <div
+              className={cx(
+                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                msg.role === "user"
+                  ? "bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-white"
+                  : msg.role === "error"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-[linear-gradient(135deg,#101a33,#1e3069)] text-white",
+              )}
+            >
+              {msg.role === "user" ? "Me" : msg.role === "error" ? "!" : "AI"}
+            </div>
+
+            <div
+              className={cx(
+                "flex max-w-[75%] flex-col gap-1",
+                msg.role === "user" ? "items-end" : "items-start",
+              )}
+            >
+              <div
+                className={cx(
+                  "rounded-2xl px-4 py-3 text-sm leading-7",
+                  msg.role === "user"
+                    ? "rounded-tr-sm bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-white shadow-[0_4px_16px_-6px_rgba(59,130,246,0.5)]"
+                    : msg.role === "error"
+                      ? "rounded-tl-sm border border-red-200 bg-red-50 text-red-700"
+                      : "rounded-tl-sm border border-slate-200 bg-white text-slate-800 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)]",
+                )}
+              >
+                {msg.content.split("\n").map((line, i, arr) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static render
+                  <span key={i}>
+                    {line}
+                    {i < arr.length - 1 && <br />}
+                  </span>
+                ))}
+              </div>
+              <span className="text-[10px] text-slate-400">{formatTime(msg.timestamp)}</span>
+            </div>
+          </div>
+        ))}
+
+        {isPending && (
+          <div className="flex gap-3">
+            {/* Avatar with pulse ring */}
+            <div className="relative mt-0.5 shrink-0">
+              <div className="absolute inset-0 animate-ping rounded-full bg-blue-400/30" />
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#101a33,#1e3069)] text-[11px] font-semibold text-white">
+                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Thinking card */}
+            <div className="rounded-2xl rounded-tl-sm border border-blue-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)] min-w-50">
+              {/* Status label */}
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="flex gap-0.5">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-blue-500 [animation-delay:0ms]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-blue-400 [animation-delay:180ms]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-blue-300 [animation-delay:360ms]" />
+                </span>
+                <span className="text-[11px] font-semibold text-blue-600 transition-all duration-500">
+                  {THINKING_STEPS[thinkingStep]}
+                </span>
+              </div>
+              {/* Shimmer lines */}
+              <div className="space-y-2">
+                <div className="h-2.5 w-full animate-pulse rounded-full bg-slate-100" />
+                <div className="h-2.5 w-[80%] animate-pulse rounded-full bg-slate-100 [animation-delay:200ms]" />
+                <div className="h-2.5 w-[55%] animate-pulse rounded-full bg-slate-100 [animation-delay:400ms]" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3">
-        <textarea
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
-          className={cx(themeClassNames.input, "min-h-32")}
-          placeholder="Ask support about your next step..."
-        />
-        <div className="flex flex-wrap gap-3">
+      {/* Input bar */}
+      <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage(input);
+          }}
+          className="flex items-end gap-2"
+        >
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isPending}
+            rows={1}
+            placeholder="Ask something… (Enter to send, Shift+Enter for new line)"
+            className="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-60 max-h-28 overflow-y-auto"
+            style={{ lineHeight: "1.6" }}
+          />
           <button
             type="submit"
-            disabled={isPending}
-            className={themeClassNames.primaryButtonCompact}
+            disabled={isPending || !input.trim()}
+            aria-label="Send message"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-white shadow-[0_8px_20px_-8px_rgba(59,130,246,0.65)] transition hover:brightness-110 disabled:opacity-50 disabled:shadow-none"
           >
-            {isPending ? "Generating..." : "Ask assistant"}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M14 8L2 2l2.5 6L2 14l12-6z" fill="currentColor" />
+            </svg>
           </button>
-          <button
-            type="button"
-            onClick={() => setMessage("Summarize my next medication steps in plain language.")}
-            className={themeClassNames.secondaryButtonCompact}
-          >
-            Use sample prompt
-          </button>
-        </div>
-      </form>
-
-      {answer ? (
-        <div className={themeClassNames.darkPanel}>
-          <p className={themeClassNames.text.onDarkLabel}>Assistant response</p>
-          <p className={cx("mt-3", themeClassNames.text.onDarkBody)}>{answer}</p>
-        </div>
-      ) : null}
+        </form>
+        <p className="mt-1.5 text-center text-[10px] text-slate-400">
+          AI may produce inaccurate information · Not a substitute for medical advice
+        </p>
+      </div>
     </div>
   );
 }
