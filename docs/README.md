@@ -13,6 +13,7 @@ This folder is the working product spec for the hackathon build.
 7. [06-chatbot-support.md](./06-chatbot-support.md)
 8. [07-vercel-deployment.md](./07-vercel-deployment.md)
 9. [08-main-use-cases.md](./08-main-use-cases.md)
+10. [09-mobile-readiness-blueprint.md](./09-mobile-readiness-blueprint.md)
 
 ## Current Product Scope
 
@@ -22,8 +23,8 @@ This folder is the working product spec for the hackathon build.
 
 ## Build Status Snapshot
 
-- `Implemented now`: landing page, sign-in, sign-up, shared authenticated routes, role-aware APIs, auth guards, server-session cookie bridge, legacy `/patient` and `/provider` redirects, base theming
-- `Next`: deeper UI CRUD forms, assignment management UI, real LLM integration for support chat, deployment hardening
+- `Implemented now`: landing page, sign-in, sign-up, shared authenticated routes, role-aware APIs, auth guards, server-session cookie bridge, legacy `/patient` and `/provider` redirects, enterprise module scaffolding, base theming
+- `Next`: deeper UI CRUD forms, live vendor integrations, native app implementation, deployment hardening
 
 ## Shared Route Map
 
@@ -34,4 +35,3 @@ This folder is the working product spec for the hackathon build.
 - `/messages`
 - `/account`
 - `/support`
-

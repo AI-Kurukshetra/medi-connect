@@ -1,0 +1,183 @@
+openapi: 3.1.0
+info:
+  title: MediConnect Core API
+  version: 2026-03-14
+  description: |
+    Core contract for web and mobile clients. This spec is intentionally compact and
+    focused on shared post-login modules.
+servers:
+  - url: https://{host}
+    variables:
+      host:
+        default: app.mediconnect.local
+components:
+  securitySchemes:
+    SupabaseBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        roleMode:
+          type: string
+          enum: [patient, provider]
+        scopeContext:
+          type: object
+        traceId:
+          type: string
+        auditRef:
+          type: [string, "null"]
+        data:
+          type: object
+paths:
+  /api/auth/mobile/session:
+    get:
+      summary: Check mobile session state
+      responses:
+        "200":
+          description: Session state
+    post:
+      summary: Bind mobile access token to server cookie session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                deviceId:
+                  type: string
+      responses:
+        "200":
+          description: Session bound
+    delete:
+      summary: Clear mobile session
+      responses:
+        "200":
+          description: Session cleared
+  /api/prior-auth/requests:
+    get:
+      summary: List prior authorization requests
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Prior auth list
+    post:
+      summary: Create prior authorization request
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/ehr/patient-summary:
+    get:
+      summary: Fetch hybrid FHIR/custom patient summary
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: EHR summary
+  /api/documents:
+    get:
+      summary: List documents by role-aware scope
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Document list
+    post:
+      summary: Create document record
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/emergency/incidents:
+    get:
+      summary: List escalation incidents
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Incident list
+    post:
+      summary: Create escalation incident
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/operations/inventory:
+    get:
+      summary: List inventory items
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Inventory list
+    post:
+      summary: Create inventory item
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/assistance/enrollments:
+    get:
+      summary: List assistance enrollments
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Enrollment list
+    post:
+      summary: Create assistance enrollment
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/billing/invoices:
+    get:
+      summary: List invoices
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Invoice list
+    post:
+      summary: Create invoice
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+  /api/ai/risk/adverse-event:
+    post:
+      summary: Score adverse-event risk and optionally trigger escalation
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Prediction created
+  /api/iot/devices:
+    get:
+      summary: List IoT devices
+      security:
+        - SupabaseBearer: []
+      responses:
+        "200":
+          description: Device list
+    post:
+      summary: Register IoT device
+      security:
+        - SupabaseBearer: []
+      responses:
+        "201":
+          description: Created
+

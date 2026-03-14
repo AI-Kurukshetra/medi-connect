@@ -95,6 +95,15 @@ export default async function DashboardPage() {
             <Link href="/messages" className={themeClassNames.secondaryButtonCompact}>
               Review drafts
             </Link>
+            <Link href="/prior-auth" className={themeClassNames.secondaryButtonCompact}>
+              Prior auth
+            </Link>
+            <Link href="/documents" className={themeClassNames.secondaryButtonCompact}>
+              Documents
+            </Link>
+            <Link href="/emergency" className={themeClassNames.secondaryButtonCompact}>
+              Emergency
+            </Link>
           </div>
         </SectionCard>
       ) : (
@@ -113,4 +122,3 @@ export default async function DashboardPage() {
     </PostLoginShell>
   );
 }
-

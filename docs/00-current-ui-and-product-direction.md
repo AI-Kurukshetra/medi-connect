@@ -7,6 +7,7 @@ The product flow is now:
 1. Landing page (`/`)
 2. Sign in or sign up (`/sign-in`, `/sign-up`)
 3. Shared authenticated routes (`/dashboard`, `/tasks`, `/adherence`, `/reminders`, `/messages`, `/account`, `/support`)
+4. Enterprise modules (`/prior-auth`, `/ehr`, `/operations`, `/assistance`, `/documents`, `/billing`, `/emergency`, `/ai-insights`)
 
 ## Why This Changed
 
@@ -25,6 +26,14 @@ Now, URLs are shared and role behavior is resolved inside each page and API.
   - `/messages`
   - `/account`
   - `/support`
+  - `/prior-auth`
+  - `/ehr`
+  - `/operations`
+  - `/assistance`
+  - `/documents`
+  - `/billing`
+  - `/emergency`
+  - `/ai-insights`
 - Legacy compatibility aliases:
   - `/patient` -> redirects to `/dashboard`
   - `/provider` -> redirects to `/dashboard`
@@ -48,4 +57,3 @@ Out of scope for MVP:
 - billing and insurance workflows
 - supply chain and shipping operations
 - large enterprise admin systems
-

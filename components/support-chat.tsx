@@ -26,8 +26,11 @@ export function SupportChat({ roleMode }: SupportChatProps) {
             module: "support",
           }),
         });
-        const data = (await response.json()) as { answer?: string; error?: string };
-        setAnswer(data.answer ?? data.error ?? "No response");
+        const data = (await response.json()) as {
+          data?: { answer?: string };
+          error?: string;
+        };
+        setAnswer(data.data?.answer ?? data.error ?? "No response");
       })();
     });
   };
@@ -56,4 +59,3 @@ export function SupportChat({ roleMode }: SupportChatProps) {
     </div>
   );
 }
-
