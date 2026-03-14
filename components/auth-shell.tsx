@@ -8,60 +8,60 @@ type AuthMode = "sign-in" | "sign-up";
 
 const authContent = {
   "sign-in": {
-    pill: "Member access",
-    title: "Return to your care plan in one step.",
+    pill: "Step 2 of 3",
+    title: "Sign in and jump back into your care workspace.",
     description:
-      "Sign in to continue medication onboarding, review reminders, and stay aligned with your care team.",
-    helperTitle: "What happens after sign in",
+      "The landing page explains the product. This screen gets the user into the correct role-based dashboard with the fewest possible steps.",
+    helperTitle: "What opens after sign in",
     helperPoints: [
-      "All users land on the same route map under /dashboard, /tasks, /adherence, and more.",
-      "Patient and provider behavior changes inside each shared page based on role.",
-      "The experience stays focused on care coordination, not workflow clutter.",
+      "Patients land on a simple dashboard with next steps, reminders, and support actions.",
+      "Providers open the same workspace with review panels, blockers, and follow-up actions.",
+      "Shared routes keep the demo easy to navigate on desktop and mobile.",
     ],
     flow: [
-      "Open your account",
-      "Enter shared post-login routes",
-      "Review tasks, reminders, or follow-up",
+      "Confirm account access",
+      "Open the shared dashboard shell",
+      "Continue role-based care actions",
     ],
     metrics: [
       {
-        label: "Entry point",
-        value: "Email only",
-        detail: "Simple sign-in for the hackathon MVP.",
+        label: "Auth style",
+        value: "Fast",
+        detail: "Email and password only for the MVP demo.",
       },
       {
-        label: "After access",
-        value: "Shared URLs",
-        detail: "One route map with role-aware rendering and actions.",
+        label: "Next page",
+        value: "Dashboard",
+        detail: "Every successful sign-in routes into the structured workspace.",
       },
     ],
   },
   "sign-up": {
-    pill: "New account",
-    title: "Create access, then move straight into the product.",
+    pill: "Step 2 of 3",
+    title: "Create an account, choose your role, and enter the app.",
     description:
-      "Start with the minimum details needed, choose patient or provider, and enter the MediConnect flow without extra setup steps.",
-    helperTitle: "What happens after sign up",
+      "Registration stays intentionally small so the product story happens on the landing page and the real action starts inside the dashboard.",
+    helperTitle: "What opens after sign up",
     helperPoints: [
-      "After registration, both roles land on /dashboard.",
-      "Role controls what each shared module shows and allows.",
-      "The form is intentionally short so the landing page carries most of the explanation.",
+      "Patients start with a calmer therapy dashboard focused on what happens next.",
+      "Providers get a review workspace with care status, AI summaries, and outreach actions.",
+      "One shared shell keeps the product feeling consistent across roles.",
     ],
     flow: [
       "Create your account",
-      "Choose your role",
-      "Enter shared post-login modules",
+      "Pick patient or provider",
+      "Enter the shared dashboard shell",
     ],
     metrics: [
       {
-        label: "Required fields",
+        label: "Required info",
         value: "Minimal",
-        detail: "Name, email, password, and role selection.",
+        detail: "Name, role, email, and password only.",
       },
       {
-        label: "First destination",
-        value: "Unified",
-        detail: "Users go directly into /dashboard.",
+        label: "User journey",
+        value: "Landing -> Auth -> Dashboard",
+        detail: "The full structure is visible from the first screen onward.",
       },
     ],
   },
@@ -91,9 +91,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
               />
             </div>
             <div>
-              <p className={themeClassNames.text.eyebrow}>
-                {appTheme.brand.name}
-              </p>
+              <p className={themeClassNames.text.eyebrow}>{appTheme.brand.name}</p>
               <p className={cx("text-sm", themeClassNames.text.body)}>
                 {appTheme.brand.tagline}
               </p>
@@ -101,7 +99,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
           </Link>
           <div className="flex flex-wrap gap-2">
             <Link href="/" className={themeClassNames.navLink}>
-              Back to overview
+              Back to landing
             </Link>
             <Link
               href="/sign-in"
@@ -126,16 +124,20 @@ export function AuthShell({ mode, children }: AuthShellProps) {
           </div>
         </header>
 
+        <div className="mb-6 flex flex-wrap gap-2">
+          <StatusPill tone="accent">Landing page first</StatusPill>
+          <StatusPill>{content.pill}</StatusPill>
+          <StatusPill>Role-based dashboard next</StatusPill>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className={themeClassNames.authCard}>
-            {children}
-          </section>
+          <section className={themeClassNames.authCard}>{children}</section>
 
           <section className="space-y-6">
             <div className={themeClassNames.heroCard}>
               <div className="mb-5 flex flex-wrap gap-3">
-                <StatusPill tone="accent">{content.pill}</StatusPill>
-                <StatusPill>Mobile-first auth</StatusPill>
+                <StatusPill tone="accent">Structured auth flow</StatusPill>
+                <StatusPill>Mobile-ready</StatusPill>
               </div>
               <h1 className={cx("max-w-3xl", themeClassNames.text.headingHero)}>
                 {content.title}
@@ -161,9 +163,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className={themeClassNames.authInfoCard}>
-                <p className={themeClassNames.text.eyebrow}>
-                  {content.helperTitle}
-                </p>
+                <p className={themeClassNames.text.eyebrow}>{content.helperTitle}</p>
                 <div className="mt-4 space-y-3">
                   {content.helperPoints.map((point) => (
                     <div key={point} className={themeClassNames.subtlePanel}>
@@ -174,13 +174,11 @@ export function AuthShell({ mode, children }: AuthShellProps) {
               </div>
 
               <div className={themeClassNames.authInfoCard}>
-                <p className={themeClassNames.text.eyebrow}>Simple flow</p>
+                <p className={themeClassNames.text.eyebrow}>Flow check</p>
                 <div className="mt-4 space-y-3">
                   {content.flow.map((step, index) => (
                     <div key={step} className={themeClassNames.subtlePanel}>
-                      <p className={themeClassNames.text.label}>
-                        Step 0{index + 1}
-                      </p>
+                      <p className={themeClassNames.text.label}>Step 0{index + 1}</p>
                       <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>
                         {step}
                       </p>

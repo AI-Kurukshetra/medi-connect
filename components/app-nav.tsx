@@ -2,29 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { appTheme, cx, themeClassNames } from "@/theme";
 
-const links = [
-  { href: "/", label: "Overview" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/tasks", label: "Tasks" },
-  { href: "/adherence", label: "Adherence" },
-  { href: "/reminders", label: "Reminders" },
-  { href: "/messages", label: "Messages" },
-  { href: "/account", label: "Account" },
-  { href: "/support", label: "Support" },
-  { href: "/prior-auth", label: "Prior Auth" },
-  { href: "/ehr", label: "EHR" },
-  { href: "/operations", label: "Operations" },
-  { href: "/assistance", label: "Assistance" },
-  { href: "/documents", label: "Documents" },
-  { href: "/billing", label: "Billing" },
-  { href: "/emergency", label: "Emergency" },
-  { href: "/ai-insights", label: "AI Insights" },
-];
-
-const authLinks = [
-  { href: "/sign-in", label: "Sign in" },
-  { href: "/sign-up", label: "Create account" },
-];
+const marketingLinks = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#role-panels", label: "Role views" },
+  { href: "#dashboard-preview", label: "Dashboard" },
+] as const;
 
 interface AppNavProps {
   currentPath: string;
@@ -51,42 +33,38 @@ export function AppNav({ currentPath }: AppNavProps) {
           </p>
         </div>
       </Link>
+
       <div className="flex flex-col gap-3 lg:items-end">
         <nav className="flex flex-wrap gap-2">
-          {links.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? currentPath === link.href
-                : currentPath.startsWith(link.href);
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={isActive ? themeClassNames.navLinkActive : themeClassNames.navLink}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="flex flex-wrap gap-2 sm:items-center lg:justify-end">
-          <div className={themeClassNames.chip}>
-            Mock data demo
-          </div>
-          {authLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                currentPath === link.href
-                  ? themeClassNames.navLinkActive
-                  : themeClassNames.navLink
-              }
-            >
+          {marketingLinks.map((link) => (
+            <Link key={link.href} href={link.href} className={themeClassNames.navLink}>
               {link.label}
             </Link>
           ))}
+        </nav>
+
+        <div className="flex flex-wrap gap-2 sm:items-center lg:justify-end">
+          <div className={themeClassNames.chip}>Hackathon MVP</div>
+          <Link
+            href="/sign-in"
+            className={
+              currentPath === "/sign-in"
+                ? themeClassNames.navLinkActive
+                : themeClassNames.navLink
+            }
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className={
+              currentPath === "/sign-up"
+                ? themeClassNames.navLinkActive
+                : themeClassNames.navLink
+            }
+          >
+            Create account
+          </Link>
         </div>
       </div>
     </header>

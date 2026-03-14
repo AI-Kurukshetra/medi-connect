@@ -12,7 +12,7 @@ type AccountRole = "patient" | "provider";
 
 const copy = {
   "sign-in": {
-    eyebrow: "Step 2: Access your account",
+    eyebrow: "Step 2 of 3: Access your account",
     title: "Sign in to continue",
     description:
       "You already reviewed the platform. Now enter your account and return to the right care flow.",
@@ -23,7 +23,7 @@ const copy = {
     helper: "After sign in, users land on /dashboard and shared modules adapt by role.",
   },
   "sign-up": {
-    eyebrow: "Step 2: Create your account",
+    eyebrow: "Step 2 of 3: Create your account",
     title: "Create your MediConnect access",
     description:
       "Choose your role and enter the minimum details needed to start using the platform.",
@@ -295,7 +295,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             {isPending ? "Please wait..." : content.action}
           </button>
           <Link href="/" className={themeClassNames.text.link}>
-            Back to platform overview
+            Back to landing page
           </Link>
         </div>
       </form>
