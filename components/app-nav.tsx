@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { appTheme, cx, themeClassNames } from "@/theme";
 
@@ -34,7 +35,14 @@ export function AppNav({ currentPath }: AppNavProps) {
     <header className={themeClassNames.headerCard}>
       <Link href="/" className="flex items-center gap-3">
         <div className={themeClassNames.logoBadge}>
-          {appTheme.brand.monogram}
+          <Image
+            src="/logo.png"
+            alt={`${appTheme.brand.name} logo`}
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-xl object-cover"
+            priority
+          />
         </div>
         <div>
           <p className={themeClassNames.text.eyebrow}>{appTheme.brand.name}</p>

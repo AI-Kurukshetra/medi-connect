@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { cx, themeClassNames } from "@/theme";
+import { appTheme, cx, themeClassNames } from "@/theme";
 
 type AuthMode = "sign-in" | "sign-up";
 type AccountRole = "patient" | "provider";
@@ -171,6 +172,17 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <div>
+      <div className="mb-4 inline-flex items-center gap-3 rounded-[18px] border border-[var(--card-border)] bg-[var(--card-subtle)] px-3 py-2">
+        <Image
+          src="/logo.png"
+          alt={`${appTheme.brand.name} logo`}
+          width={36}
+          height={36}
+          className="h-9 w-9 rounded-lg object-cover"
+          priority
+        />
+        <span className={themeClassNames.text.bodyStrong}>{appTheme.brand.name}</span>
+      </div>
       <p className={themeClassNames.text.eyebrow}>{content.eyebrow}</p>
       <h2 className="theme-heading mt-3 text-3xl font-semibold tracking-[-0.04em]">
         {content.title}
