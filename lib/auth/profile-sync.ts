@@ -23,6 +23,34 @@ function normalizeFullName(user: User, fullNameHint?: string | null) {
   return candidate || "MediConnect user";
 }
 
+export async function ensurePatientProfile(userId: string) {
+  const serviceClient = getSupabaseServiceClient();
+  const { data: existing } = await serviceClient
+    .from("patient_profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    return existing.id;
+  }
+
+  const { data: created } = await serviceClient
+    .from("patient_profiles")
+    .upsert(
+      {
+        user_id: userId,
+        condition_name: "Needs intake review",
+        therapy_status: "Getting started",
+      },
+      { onConflict: "user_id" },
+    )
+    .select("id")
+    .single();
+
+  return created?.id ?? null;
+}
+
 export async function syncAuthProfile({
   user,
   roleHint,
@@ -42,14 +70,7 @@ export async function syncAuthProfile({
   );
 
   if (resolvedRole === "patient") {
-    await serviceClient.from("patient_profiles").upsert(
-      {
-        user_id: user.id,
-        condition_name: "Needs intake review",
-        therapy_status: "Getting started",
-      },
-      { onConflict: "user_id" },
-    );
+    await ensurePatientProfile(user.id);
   }
 
   return {

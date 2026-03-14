@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ACCESS_TOKEN_COOKIE, ROLE_COOKIE } from "@/lib/auth/constants";
+import { ensurePatientProfile } from "@/lib/auth/profile-sync";
 import { getSupabaseServerAuthClient, getSupabaseServiceClient } from "@/lib/supabase/server";
 
 export type AppRole = "patient" | "provider";
@@ -62,23 +63,8 @@ export async function getAuthContext(): Promise<AuthContext | null> {
 
   let patientProfileId = patientProfile?.id ?? null;
 
-  // Auto-create patient_profiles row for patients who signed up before the
-  // trigger migration was applied (or if the trigger silently failed).
   if (role === "patient" && !patientProfileId) {
-    const { data: created } = await serviceClient
-      .from("patient_profiles")
-      .upsert(
-        {
-          user_id: authData.user.id,
-          condition_name: "Needs intake review",
-          therapy_status: "Getting started",
-        },
-        { onConflict: "user_id" },
-      )
-      .select("id")
-      .single();
-
-    patientProfileId = created?.id ?? null;
+    patientProfileId = await ensurePatientProfile(authData.user.id);
   }
 
   return {

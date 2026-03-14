@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { jsonValidationError, requireApiAuthContext } from "@/lib/auth/api";
+import { ensurePatientProfile } from "@/lib/auth/profile-sync";
 import { canAccessPatientProfile, resolveScopedPatientProfile } from "@/lib/data/role-scope";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 
@@ -72,10 +73,14 @@ export async function POST(request: Request) {
     auth.context,
     body.patientProfileId,
   );
-  const patientProfileId = scoped.patientProfileId;
+  let patientProfileId = scoped.patientProfileId;
 
   if (scoped.unauthorizedRequest) {
     return NextResponse.json({ error: "Patient profile not found." }, { status: 404 });
+  }
+
+  if (!patientProfileId && auth.context.role === "patient") {
+    patientProfileId = await ensurePatientProfile(auth.context.userId);
   }
 
   if (!patientProfileId) {

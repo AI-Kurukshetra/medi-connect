@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AddTaskButton } from "@/components/add-task-button";
 import { PostLoginShell } from "@/components/post-login-shell";
 import { requireAuthContext } from "@/lib/auth/server";
@@ -86,8 +87,20 @@ function getTaskPriority(task: TaskRecord): TaskPriority {
   return "low";
 }
 
-export default async function TasksPage() {
+type TasksPageProps = {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+};
+
+function normalizeTab(value?: string) {
+  return value === "open" || value === "completed" ? value : "all";
+}
+
+export default async function TasksPage({ searchParams }: TasksPageProps) {
   const context = await requireAuthContext();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const activeTab = normalizeTab(resolvedSearchParams?.tab);
   const patientProfileId = await resolveScopedPatientProfileId(context);
   const fallbackTasks =
     context.role === "provider"
@@ -156,6 +169,18 @@ export default async function TasksPage() {
 
   const completedTasks = taskItems.filter((task) => task.status === "complete");
   const openTasks = taskItems.filter((task) => task.status !== "complete");
+  const visibleTasks =
+    activeTab === "open" ? openTasks : activeTab === "completed" ? completedTasks : taskItems;
+  const tabs = [
+    { label: "All Tasks", href: "/tasks", active: activeTab === "all", count: taskItems.length },
+    { label: "Open", href: "/tasks?tab=open", active: activeTab === "open", count: openTasks.length },
+    {
+      label: "Completed",
+      href: "/tasks?tab=completed",
+      active: activeTab === "completed",
+      count: completedTasks.length,
+    },
+  ];
 
   return (
     <PostLoginShell currentPath="/tasks">
@@ -174,25 +199,23 @@ export default async function TasksPage() {
         </div>
 
         <div className="mt-7 flex gap-6 border-b border-slate-200">
-          {[
-            { label: "All Tasks", active: true },
-            { label: "Open", active: false },
-            { label: "Completed", active: false },
-          ].map((tab) => (
-            <div
+          {tabs.map((tab) => (
+            <Link
               key={tab.label}
+              href={tab.href}
               className={cx(
-                "border-b-2 pb-3 text-sm font-semibold",
+                "border-b-2 pb-3 text-sm font-semibold transition",
                 tab.active ? "border-[#356ae6] text-[#356ae6]" : "border-transparent text-slate-400",
               )}
             >
               {tab.label}
-            </div>
+              <span className="ml-2 text-xs">{tab.count}</span>
+            </Link>
           ))}
         </div>
 
         <div className="mt-6 space-y-3">
-          {taskItems.map((task) => {
+          {visibleTasks.map((task) => {
             const priority = priorityMeta[getTaskPriority(task)];
             const status = statusMeta[task.status];
 
@@ -247,10 +270,10 @@ export default async function TasksPage() {
           })}
         </div>
 
-        {taskItems.length > 0 ? (
+        {visibleTasks.length > 0 ? (
           <div className="mt-8 flex flex-col gap-4 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Showing {taskItems.length} task{taskItems.length === 1 ? "" : "s"}
+              Showing {visibleTasks.length} task{visibleTasks.length === 1 ? "" : "s"}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -266,13 +289,20 @@ export default async function TasksPage() {
               <button
                 type="button"
                 className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-slate-400"
-                disabled={openTasks.length === 0 && completedTasks.length === 0}
+                disabled={visibleTasks.length === 0}
               >
                 Next
               </button>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-8 rounded-[18px] border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
+            <p className="text-sm font-semibold text-slate-900">No tasks in this tab yet</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Switch tabs or create a new task to populate this view.
+            </p>
+          </div>
+        )}
       </section>
     </PostLoginShell>
   );
