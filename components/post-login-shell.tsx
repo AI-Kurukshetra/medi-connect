@@ -233,7 +233,7 @@ function MobileRouteStrip({
 export async function PostLoginShell({ currentPath, children }: PostLoginShellProps) {
   const context = await requireAuthContext();
   const firstName = context.fullName.split(" ")[0] ?? context.fullName;
-  const profileLabel = context.patientProfileId
+  const profileLabel = context.role === "patient" && context.patientProfileId
     ? `Patient ID: #${context.patientProfileId.slice(0, 6).toUpperCase()}`
     : `User ID: #${context.userId.slice(0, 6).toUpperCase()}`;
   const mobileRoutes = [...primaryRoutes, ...secondaryRoutes, ...roleRoutes[context.role]];

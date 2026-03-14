@@ -7,94 +7,85 @@ import { patientJourney } from "@/lib/mock-data";
 import { appTheme, cx, themeClassNames, themeLayoutClasses } from "@/theme";
 
 export const metadata: Metadata = {
-  title: "AI Care Coordination Landing Page",
+  title: "MediConnect | Patient Portal For Specialty Medication Journeys",
   description:
-    "MediConnect now opens with a stronger landing page, cleaner auth entry, and a structured dashboard workspace for patients and providers.",
+    "MediConnect is a patient-first specialty medication portal with AI-guided checklists, reminders, messages, and provider follow-up in one connected workspace.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "MediConnect | Landing page to care workspace",
+    title: "MediConnect | Patient Portal For Specialty Medication Journeys",
     description:
-      "A patient-first specialty medication MVP with a refined landing page and a proper role-aware dashboard shell.",
+      "Patients get clear next steps. Providers get a tighter review lane. Both live in one connected portal.",
     url: "/",
     siteName: appTheme.brand.name,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MediConnect | Landing page to care workspace",
+    title: "MediConnect | Patient Portal For Specialty Medication Journeys",
     description:
-      "Refined landing page, auth flow, and role-aware dashboard shell for specialty care coordination.",
+      "A cleaner specialty medication portal for tasks, reminders, messages, support, and provider review.",
   },
 };
 
 export default function Home() {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const { patient, provider, profile, medication, aiInsights, careTasks, reminders, providerSummary } =
-    patientJourney;
+  const {
+    patient,
+    profile,
+    medication,
+    aiInsights,
+    careTasks,
+    reminders,
+    messageDraft,
+    providerSummary,
+    timeline,
+  } = patientJourney;
 
-  const signalCards = [
+  const heroMetrics = [
     {
-      label: "Entry flow",
-      value: "Landing -> Auth -> Workspace",
-      detail: "The first-time experience is now easy to explain in a demo.",
+      label: "Patients",
+      value: "Clear next steps",
+      detail: "Checklist, reminders, and support stay in plain language.",
     },
     {
-      label: "Primary roles",
-      value: "Patient + Provider",
-      detail: "One product shell, two perspectives, less duplication.",
+      label: "Providers",
+      value: "Faster follow-up",
+      detail: "Review blockers, adherence signals, and drafted outreach in one place.",
     },
     {
       label: "AI role",
-      value: "Explain, draft, summarize",
-      detail: "AI reduces confusion without replacing human decisions.",
+      value: "Explain and draft",
+      detail: "AI summarizes, rewrites, and guides. Humans still make care decisions.",
     },
   ];
 
-  const storyBlocks = [
+  const featureGrid = [
     {
-      title: "Patients feel oriented faster",
-      detail:
-        "The first screen frames the medication journey clearly before the user sees a form or dashboard module.",
+      title: "Task board that answers what happens next",
+      detail: "Patients get a calmer checklist instead of scattered medication setup steps.",
     },
     {
-      title: "Providers review from the same workspace",
-      detail:
-        "Shared routes keep the demo simple while the dashboard panels shift to the right provider actions.",
+      title: "Reminders and adherence in the same rhythm",
+      detail: "Dose prep, follow-up, and refill timing stay visible without leaving the portal.",
     },
     {
-      title: "Every screen points to the next step",
-      detail:
-        "The MVP stays focused on what happens next, not enterprise workflow depth.",
-    },
-  ];
-
-  const workspacePanels = [
-    {
-      title: "Header",
-      detail: "Brand, session context, support, and account actions stay visible after sign-in.",
+      title: "Secure messaging that starts from context",
+      detail: "Questions, drafts, and provider outreach connect back to the medication journey.",
     },
     {
-      title: "Sidebar",
-      detail: "Dashboard, tasks, reminders, messages, support, account, and role panels all stay in one navigation system.",
-    },
-    {
-      title: "Role panel",
-      detail: "Patients see guidance and support prompts; providers see risk, outreach, and review actions.",
-    },
-    {
-      title: "Main canvas",
-      detail: "Each route opens inside the same shell so the structure feels consistent across the app.",
+      title: "Provider review that stays lightweight",
+      detail: "The MVP highlights blockers and AI summaries without turning into enterprise software.",
     },
   ];
 
   const roleBoards = [
     {
-      eyebrow: "Patient board",
-      title: "A calmer therapy start experience",
-      detail:
-        "The patient flow focuses on medication instructions, reminders, support, and one next-step board.",
+      eyebrow: "Patient mode",
+      title: "A simpler therapy start for patients",
+      description:
+        "The portal keeps medication prep, reminders, and support inside one calm experience.",
       tone: "accent" as const,
       points: [
         aiInsights[0]?.summary ?? "Review your next medication steps in plain language.",
@@ -103,28 +94,55 @@ export default function Home() {
       ],
       ctaHref: "/sign-up",
       ctaLabel: "Create patient access",
+      panelClassName:
+        "border-[rgba(68,111,255,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,248,255,0.98))]",
     },
     {
-      eyebrow: "Provider board",
-      title: "A faster care review surface",
-      detail:
-        "The provider flow keeps blockers, adherence context, and drafted follow-up close to the main dashboard.",
+      eyebrow: "Provider mode",
+      title: "A tighter review surface for care teams",
+      description:
+        "Providers can scan blockers, adherence context, and outreach prompts without jumping between systems.",
       tone: "warning" as const,
       points: [
         providerSummary.adherenceTrend,
         providerSummary.recommendedAction,
-        `Current review patient: ${patient.name}.`,
+        `Assigned patient: ${patient.name}.`,
       ],
       ctaHref: "/sign-in",
       ctaLabel: "Open provider sign in",
+      panelClassName:
+        "border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,255,0.98))]",
+    },
+  ];
+
+  const workflowSteps = [
+    {
+      label: "01",
+      title: "Patients land on one clear story",
+      detail: "The homepage explains the medication journey before anyone hits a form.",
+    },
+    {
+      label: "02",
+      title: "Sign in routes into one shared shell",
+      detail: "Patients and providers use the same portal frame with role-aware content.",
+    },
+    {
+      label: "03",
+      title: "Core modules stay visible together",
+      detail: "Tasks, reminders, adherence, support, and messages stay connected.",
+    },
+    {
+      label: "04",
+      title: "AI keeps the flow understandable",
+      detail: "Summaries, question drafts, and next-step guidance reduce confusion fast.",
     },
   ];
 
   const launchChecklist = [
     "Open the landing page and explain the product in under 20 seconds.",
-    "Create or sign in to an account from the hero CTA.",
-    "Show the branded dashboard shell with sidebar and role-wise panels.",
-    "Move through tasks, reminders, messages, and support without changing layout patterns.",
+    "Show the mini portal preview before entering the authenticated workspace.",
+    "Walk through tasks, reminders, support, and messages without changing layout patterns.",
+    "Switch to the provider story to show blockers and AI-assisted follow-up.",
   ];
 
   const websiteSchema = {
@@ -133,7 +151,7 @@ export default function Home() {
     name: appTheme.brand.name,
     url: siteUrl,
     description:
-      "MediConnect is a specialty medication care coordination MVP with a refined landing page, authentication flow, and role-aware dashboard workspace.",
+      "MediConnect is a patient-first specialty medication portal with AI-guided checklists, reminders, and provider follow-up.",
   };
 
   const softwareSchema = {
@@ -148,7 +166,7 @@ export default function Home() {
       priceCurrency: "USD",
     },
     description:
-      "MediConnect guides patients and providers through specialty medication onboarding, reminders, and follow-up in one structured interface.",
+      "MediConnect helps patients and providers move through specialty medication onboarding, reminders, messages, and follow-up inside one structured portal.",
     url: siteUrl,
   };
 
@@ -167,246 +185,381 @@ export default function Home() {
         <AppNav currentPath="/" />
 
         <main className={themeLayoutClasses.main}>
-          <section className="grid gap-6 xl:grid-cols-[1.14fr_0.86fr]">
-            <div className={themeClassNames.heroCard}>
-              <div className="mb-6 flex flex-wrap gap-3">
-                <StatusPill tone="accent">Refined landing page</StatusPill>
-                <StatusPill>Proper dashboard structure</StatusPill>
-              </div>
-              <h1 className={cx("max-w-4xl", themeClassNames.text.headingHero)}>
-                Specialty care now starts with a clear landing page and ends in a real workspace.
-              </h1>
-              <p className={cx("mt-5 max-w-3xl", themeClassNames.text.bodyLarge)}>
-                MediConnect now feels like a product, not just a list of routes. New users learn the story first, move into sign-in or sign-up, and then land inside a branded dashboard with a header, sidebar, support access, account controls, and role-wise panels.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/sign-up" className={themeClassNames.primaryButton}>
-                  Create account
-                </Link>
-                <Link href="/sign-in" className={themeClassNames.secondaryButton}>
-                  Sign in
-                </Link>
-              </div>
-              <div className="mt-10 grid gap-3 sm:grid-cols-3">
-                {signalCards.map((item) => (
-                  <div key={item.label} className={themeClassNames.metricTile}>
-                    <p className={themeClassNames.text.label}>{item.label}</p>
-                    <p className={cx("mt-3 text-xl font-semibold tracking-[-0.04em] text-[var(--foreground-strong)]")}>
-                      {item.value}
-                    </p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{item.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <section className="grid gap-6 xl:grid-cols-[1.03fr_0.97fr]">
+            <section className="relative overflow-hidden rounded-[38px] border border-[rgba(68,111,255,0.16)] bg-[linear-gradient(135deg,#101a33_0%,#152347_34%,#2d63e6_100%)] p-7 text-white shadow-[0_32px_80px_-42px_rgba(37,99,235,0.6)] md:p-10">
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_36%)]" />
+              <div className="absolute inset-y-0 right-0 w-[42%] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
+              <div className="absolute right-[-4rem] top-[-3rem] h-56 w-56 rounded-full border border-white/8 bg-white/6" />
+              <div className="absolute bottom-[-5rem] right-10 h-60 w-60 rounded-full border border-white/8 bg-white/5" />
 
-            <section className="space-y-6">
-              <div className={themeClassNames.darkPanel}>
-                <p className={themeClassNames.text.onDarkLabel}>Live demo story</p>
-                <h2 className={cx("mt-3", themeClassNames.text.onDarkHero)}>
-                  {patient.name} begins {medication.name} with {provider.name} in one connected flow.
-                </h2>
-                <p className={cx("mt-4", themeClassNames.text.onDarkBody)}>
-                  {profile.therapyStatus}. The new UI keeps preparation, reminders, support, and follow-up aligned inside one product journey.
+              <div className="relative">
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill tone="accent">Patient-first portal</StatusPill>
+                  <StatusPill>AI-guided clarity</StatusPill>
+                  <StatusPill>Shared provider workspace</StatusPill>
+                </div>
+
+                <h1 className="mt-7 max-w-4xl text-4xl font-semibold tracking-[-0.07em] text-white md:text-6xl">
+                  Specialty medication care, finally shaped like one connected portal.
+                </h1>
+
+                <p className="mt-5 max-w-3xl text-lg leading-8 text-blue-100 md:text-xl">
+                  MediConnect gives patients a calmer start and gives providers a cleaner review lane.
+                  Tasks, reminders, messages, support, and follow-up all live inside the same product
+                  rhythm.
                 </p>
-                <div className="mt-6 grid gap-3">
-                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
-                    <p className={themeClassNames.text.onDarkLabel}>Condition</p>
-                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{profile.condition}</p>
-                  </div>
-                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
-                    <p className={themeClassNames.text.onDarkLabel}>Next visit</p>
-                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{profile.nextAppointmentAt}</p>
-                  </div>
-                  <div className="rounded-[22px] border border-white/12 bg-white/8 p-4">
-                    <p className={themeClassNames.text.onDarkLabel}>Provider signal</p>
-                    <p className={cx("mt-1", themeClassNames.text.onDarkBody)}>{providerSummary.adherenceTrend}</p>
-                  </div>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/sign-up"
+                    className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#2256da] shadow-[0_22px_40px_-26px_rgba(255,255,255,0.8)] transition hover:bg-blue-50"
+                  >
+                    Create account
+                  </Link>
+                  <Link
+                    href="/sign-in"
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-white/16 bg-white/8 px-6 text-sm font-semibold text-white transition hover:bg-white/12"
+                  >
+                    Sign in to portal
+                  </Link>
+                </div>
+
+                <div className="mt-10 grid gap-3 sm:grid-cols-3">
+                  {heroMetrics.map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-[24px] border border-white/12 bg-white/8 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-100/80">
+                        {item.label}
+                      </p>
+                      <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-white">
+                        {item.value}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-blue-100">{item.detail}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </section>
 
-              <div className={themeClassNames.sidebarCard}>
-                <div className="mb-4 flex items-center justify-between gap-3">
+            <section
+              id="workspace"
+              className="rounded-[34px] border border-slate-800 bg-[linear-gradient(180deg,#0d1527_0%,#111b31_100%)] p-4 shadow-[0_28px_68px_-38px_rgba(15,23,42,0.8)]"
+            >
+              <div className="rounded-[28px] border border-slate-800 bg-[#0f172a] p-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-4">
                   <div>
-                    <p className={themeClassNames.text.eyebrow}>At-a-glance flow</p>
-                    <h2 className={cx("mt-2", themeClassNames.text.headingPanel)}>
-                      First visit to signed-in workspace
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Portal preview
+                    </p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-white">
+                      The landing page now looks like the product it leads into.
                     </h2>
                   </div>
-                  <div className={themeClassNames.chip}>3 screens</div>
+                  <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                    Live demo
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <div className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>01 Landing page</p>
-                    <p className={cx("mt-1", themeClassNames.text.body)}>
-                      Explain value, roles, and the care journey before asking the user to log in.
-                    </p>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[112px_1fr]">
+                  <div className="rounded-[24px] border border-slate-800 bg-[#0b1221] p-3">
+                    <div className="rounded-2xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-3 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_-20px_rgba(59,130,246,0.7)]">
+                      Dashboard
+                    </div>
+                    <div className="mt-3 space-y-2 text-xs text-slate-500">
+                      <div className="rounded-xl px-3 py-2 text-slate-300">Tasks</div>
+                      <div className="rounded-xl px-3 py-2 text-slate-300">Reminders</div>
+                      <div className="rounded-xl px-3 py-2 text-slate-300">Messages</div>
+                      <div className="rounded-xl px-3 py-2 text-slate-300">Support</div>
+                    </div>
                   </div>
-                  <div className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>02 Auth screen</p>
-                    <p className={cx("mt-1", themeClassNames.text.body)}>
-                      Keep sign-in and sign-up short so the form does not carry the whole product story.
-                    </p>
-                  </div>
-                  <div className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>03 Dashboard workspace</p>
-                    <p className={cx("mt-1", themeClassNames.text.body)}>
-                      Open the header, sidebar, account, support, and role-specific modules in one consistent shell.
-                    </p>
+
+                  <div className="space-y-4">
+                    <div className="rounded-[26px] bg-[linear-gradient(135deg,#3c6be4_0%,#2d63e6_62%,#5f8dff_100%)] p-5 text-white">
+                      <p className="text-3xl font-semibold tracking-[-0.05em]">Hello, {patient.name.split(" ")[0]}</p>
+                      <p className="mt-2 text-sm text-blue-100">{profile.therapyStatus}</p>
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <span className="rounded-full bg-white/14 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
+                          Active plan
+                        </span>
+                        <span className="text-sm text-blue-100">{profile.condition}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-[20px] border border-slate-800 bg-[#121d35] p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Open tasks
+                        </p>
+                        <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">
+                          {careTasks.filter((task) => task.status !== "complete").length}
+                        </p>
+                      </div>
+                      <div className="rounded-[20px] border border-slate-800 bg-[#121d35] p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Reminders
+                        </p>
+                        <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">
+                          {reminders.length}
+                        </p>
+                      </div>
+                      <div className="rounded-[20px] border border-slate-800 bg-[#121d35] p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                          Follow-up
+                        </p>
+                        <p className="mt-3 text-sm font-semibold leading-6 text-slate-100">
+                          {providerSummary.blockers[0]}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-slate-800 bg-[#121d35] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-white">Next actions</p>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          This week
+                        </span>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {careTasks.slice(0, 3).map((task) => (
+                          <div
+                            key={task.id}
+                            className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-800 bg-[#0b1221] px-3 py-3"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-slate-100">{task.title}</p>
+                              <p className="mt-1 text-xs text-slate-400">{task.dueLabel}</p>
+                            </div>
+                            <div
+                              className={cx(
+                                "rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]",
+                                task.status === "complete"
+                                  ? "bg-emerald-500/10 text-emerald-300"
+                                  : task.status === "current"
+                                    ? "bg-amber-500/10 text-amber-300"
+                                    : "bg-blue-500/10 text-blue-300",
+                              )}
+                            >
+                              {task.status}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
           </section>
 
-          <section id="story" className="grid gap-6 lg:grid-cols-[0.88fr_1.12fr] scroll-mt-28">
-            <SectionCard
-              eyebrow="Why this matters"
-              title="The experience now tells a stronger story before any dashboard module opens"
-              description="The landing page is rebuilt to frame the product like a real patient and provider tool."
-            >
-              <div className="space-y-3">
-                {storyBlocks.map((block) => (
-                  <div key={block.title} className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.bodyStrong}>{block.title}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{block.detail}</p>
-                  </div>
-                ))}
+          <section
+            id="story"
+            className="grid gap-4 md:grid-cols-2 xl:grid-cols-[1.15fr_0.85fr_0.85fr_0.85fr]"
+          >
+            <section className="rounded-[30px] border border-[rgba(68,111,255,0.12)] bg-white p-6 shadow-[0_18px_38px_-28px_rgba(35,56,128,0.18)] md:col-span-2 xl:col-span-1">
+              <p className={themeClassNames.text.eyebrow}>Why it converts better</p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-slate-950">
+                The homepage now feels like the portal, not a separate marketing skin.
+              </h2>
+              <p className="mt-4 text-base leading-8 text-slate-600">
+                Instead of broad healthcare copy, the landing page now sells one specific story:
+                specialty medication patients need clarity, and care teams need a simple review lane.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <StatusPill tone="accent">Tasks</StatusPill>
+                <StatusPill tone="warning">Reminders</StatusPill>
+                <StatusPill>Messages</StatusPill>
+                <StatusPill>Support</StatusPill>
               </div>
-            </SectionCard>
+            </section>
 
-            <SectionCard
-              eyebrow="Patient journey"
-              title="A better first-run narrative"
-              description="The landing screen now mirrors the actual demo flow that follows after authentication."
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                {careTasks.slice(0, 2).map((task) => (
-                  <div key={task.id} className={themeClassNames.softPanel}>
-                    <p className={themeClassNames.text.label}>{task.status}</p>
-                    <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>{task.title}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{task.description}</p>
-                  </div>
-                ))}
-                {reminders.slice(0, 2).map((reminder) => (
-                  <div key={reminder.id} className={themeClassNames.softPanel}>
-                    <p className={themeClassNames.text.label}>{reminder.channel}</p>
-                    <p className={cx("mt-2", themeClassNames.text.bodyStrong)}>{reminder.title}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{reminder.window}</p>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          </section>
-
-          <section id="roles" className="grid gap-6 xl:grid-cols-2 scroll-mt-28">
-            {roleBoards.map((board) => (
-              <SectionCard
-                key={board.title}
-                eyebrow={board.eyebrow}
-                title={board.title}
-                description={board.detail}
+            {featureGrid.map((feature) => (
+              <section
+                key={feature.title}
+                className="rounded-[30px] border border-[rgba(68,111,255,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(246,249,255,0.98))] p-6 shadow-[0_18px_38px_-28px_rgba(35,56,128,0.14)]"
               >
-                <div className="mb-5 flex flex-wrap gap-2">
-                  <StatusPill tone={board.tone}>{board.eyebrow}</StatusPill>
-                  <StatusPill>Role-wise panel</StatusPill>
-                </div>
-                <div className="space-y-3">
-                  {board.points.map((point) => (
-                    <div key={point} className={themeClassNames.subtlePanel}>
-                      <p className={themeClassNames.text.body}>{point}</p>
-                    </div>
-                  ))}
-                </div>
-                <Link href={board.ctaHref} className={cx("mt-5", themeClassNames.primaryButtonCompact)}>
-                  {board.ctaLabel}
-                </Link>
-              </SectionCard>
+                <div className="h-10 w-10 rounded-2xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] shadow-[0_18px_30px_-22px_rgba(59,130,246,0.7)]" />
+                <h3 className="mt-5 text-xl font-semibold tracking-[-0.03em] text-slate-950">
+                  {feature.title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{feature.detail}</p>
+              </section>
             ))}
           </section>
 
-          <section id="workspace" className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] scroll-mt-28">
-            <SectionCard
-              eyebrow="Dashboard shell"
-              title="After sign-in, every main component lives inside the sidebar and header structure"
-              description="This is the foundation for dashboard, tasks, reminders, messages, support, account, and role panels."
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                {workspacePanels.map((panel) => (
-                  <div key={panel.title} className={themeClassNames.softPanel}>
-                    <p className={themeClassNames.text.bodyStrong}>{panel.title}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{panel.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
+          <section id="roles" className="grid gap-6 xl:grid-cols-2">
+            {roleBoards.map((board) => (
+              <section
+                key={board.title}
+                className={cx(
+                  "rounded-[34px] border p-7 shadow-[0_20px_42px_-30px_rgba(35,56,128,0.18)]",
+                  board.panelClassName,
+                )}
+              >
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill tone={board.tone}>{board.eyebrow}</StatusPill>
+                  <StatusPill>Shared shell</StatusPill>
+                </div>
+                <h2 className="mt-5 text-3xl font-semibold tracking-[-0.05em] text-slate-950">
+                  {board.title}
+                </h2>
+                <p className="mt-3 max-w-2xl text-base leading-8 text-slate-600">
+                  {board.description}
+                </p>
 
-            <SectionCard
-              eyebrow="Demo payoff"
-              title="The UI now supports a cleaner walkthrough"
-              description="A stronger shell lets you show more features without the app feeling scattered."
-            >
-              <div className="space-y-3">
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>Navigation stays familiar</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    Support, account, patient tools, provider tools, and shared modules remain in one visible layout.
-                  </p>
+                <div className="mt-6 space-y-3">
+                  {board.points.map((point) => (
+                    <div
+                      key={point}
+                      className="rounded-[22px] border border-[rgba(68,111,255,0.1)] bg-white/88 px-4 py-4"
+                    >
+                      <p className="text-sm leading-7 text-slate-700">{point}</p>
+                    </div>
+                  ))}
                 </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>The dashboard becomes the control center</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    Users can move between summary cards, care tasks, reminders, and outreach without losing context.
-                  </p>
-                </div>
-                <div className={themeClassNames.subtlePanel}>
-                  <p className={themeClassNames.text.bodyStrong}>The structure is demo-friendly</p>
-                  <p className={cx("mt-2", themeClassNames.text.body)}>
-                    It is now much easier to explain the app flow live or in a pitch deck.
-                  </p>
-                </div>
-              </div>
-            </SectionCard>
+
+                <Link
+                  href={board.ctaHref}
+                  className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-5 text-sm font-semibold text-white shadow-[0_20px_34px_-22px_rgba(59,130,246,0.75)] transition hover:brightness-[1.03]"
+                >
+                  {board.ctaLabel}
+                </Link>
+              </section>
+            ))}
           </section>
 
-          <section id="launch" className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] scroll-mt-28">
+          <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
             <SectionCard
-              eyebrow="Launch checklist"
-              title="How to demo the refreshed UI"
-              description="Use this sequence to show the new structure clearly."
+              eyebrow="Portal rhythm"
+              title="How the product moves from orientation to action"
+              description="The landing page now sets up the same flow users see after they enter the portal."
             >
               <div className="space-y-3">
-                {launchChecklist.map((item, index) => (
-                  <div key={item} className={themeClassNames.subtlePanel}>
-                    <p className={themeClassNames.text.label}>Step 0{index + 1}</p>
-                    <p className={cx("mt-2", themeClassNames.text.body)}>{item}</p>
+                {workflowSteps.map((step) => (
+                  <div
+                    key={step.label}
+                    className="grid gap-3 rounded-[24px] border border-[rgba(68,111,255,0.12)] bg-[rgba(248,251,255,0.96)] p-4 sm:grid-cols-[56px_1fr]"
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-sm font-semibold text-white shadow-[0_18px_30px_-22px_rgba(59,130,246,0.7)]">
+                      {step.label}
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-slate-950">{step.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">{step.detail}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </SectionCard>
 
-            <div className={themeClassNames.heroCard}>
-              <div className="mb-5 flex flex-wrap gap-3">
-                <StatusPill tone="accent">Ready for the next build</StatusPill>
-                <StatusPill>Desktop and mobile</StatusPill>
+            <section className="grid gap-6">
+              <SectionCard
+                eyebrow="Patient-facing moments"
+                title="The key portal moments already fit on one screen"
+                description="Instead of long feature marketing, the page previews the exact actions patients and providers will take."
+              >
+                <div className="grid gap-3 md:grid-cols-2">
+                  {timeline.map((item) => (
+                    <div key={item.label} className={themeClassNames.softPanel}>
+                      <p className={themeClassNames.text.bodyStrong}>{item.label}</p>
+                      <p className={cx("mt-2", themeClassNames.text.body)}>{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                eyebrow="Portal signals"
+                title="What stays visible after sign-in"
+                description="The landing page primes the exact modules people rely on once they enter the product."
+              >
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>Medication guidance</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>
+                      {aiInsights[1]?.summary}
+                    </p>
+                  </div>
+                  <div className={themeClassNames.subtlePanel}>
+                    <p className={themeClassNames.text.bodyStrong}>Secure outreach</p>
+                    <p className={cx("mt-2", themeClassNames.text.body)}>{messageDraft.subject}</p>
+                  </div>
+                  {reminders.slice(0, 2).map((reminder) => (
+                    <div key={reminder.id} className={themeClassNames.subtlePanel}>
+                      <p className={themeClassNames.text.bodyStrong}>{reminder.title}</p>
+                      <p className={cx("mt-2", themeClassNames.text.body)}>
+                        {reminder.window} · {reminder.channel}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            </section>
+          </section>
+
+          <section
+            id="launch"
+            className="rounded-[38px] border border-[rgba(68,111,255,0.14)] bg-[linear-gradient(135deg,#f8fbff_0%,#eef4ff_45%,#f8fbff_100%)] p-7 shadow-[0_24px_54px_-34px_rgba(35,56,128,0.18)] md:p-9"
+          >
+            <div className="grid gap-8 xl:grid-cols-[0.98fr_1.02fr] xl:items-end">
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill tone="accent">Demo ready</StatusPill>
+                  <StatusPill>Tailored to the portal theme</StatusPill>
+                </div>
+                <h2 className="mt-5 text-4xl font-semibold tracking-[-0.06em] text-slate-950">
+                  Start on a stronger landing page, then move straight into the workspace.
+                </h2>
+                <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
+                  The product story is now tighter: explain the portal, show the preview, sign in,
+                  then move through the same blue-and-navy design language inside the app itself.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/sign-up"
+                    className="inline-flex h-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-6 text-sm font-semibold text-white shadow-[0_20px_34px_-22px_rgba(59,130,246,0.75)] transition hover:brightness-[1.03]"
+                  >
+                    Create account
+                  </Link>
+                  <Link
+                    href="/sign-in"
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-[rgba(68,111,255,0.16)] bg-white px-6 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                  >
+                    Sign in
+                  </Link>
+                </div>
               </div>
-              <h2 className={themeClassNames.text.headingSection}>
-                Start from the landing page and move straight into the new workspace.
-              </h2>
-              <p className={cx("mt-4 max-w-2xl", themeClassNames.text.bodyLarge)}>
-                The whole experience is now better sequenced: a refined landing page, focused sign-in and sign-up screens, then a structured post-login dashboard with sidebar navigation, support access, account controls, and role-aware panels.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/sign-up" className={themeClassNames.primaryButton}>
-                  Create account
-                </Link>
-                <Link href="/sign-in" className={themeClassNames.secondaryButton}>
-                  Sign in
-                </Link>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {launchChecklist.map((item, index) => (
+                  <div
+                    key={item}
+                    className="rounded-[24px] border border-[rgba(68,111,255,0.12)] bg-white px-4 py-4 shadow-[0_16px_32px_-28px_rgba(35,56,128,0.16)]"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#4f86ff]">
+                      Step 0{index + 1}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-700">{item}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
         </main>
+
+        <footer className="mt-8 border-t border-slate-200 py-6">
+          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between">
+            <p className="text-xs text-slate-400">© 2026 {appTheme.brand.name}. All rights reserved.</p>
+            <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+              <Link href="/privacy" className="hover:text-slate-900 transition">Privacy Policy</Link>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <Link href="/terms" className="hover:text-slate-900 transition">Terms of Service</Link>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <Link href="/support" className="hover:text-slate-900 transition">Help Center</Link>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

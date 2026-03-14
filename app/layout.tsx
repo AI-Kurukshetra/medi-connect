@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthSessionSync } from "@/components/auth-session-sync";
 import { appTheme, themeCssVariables } from "@/theme";
 import "./globals.css";
 
@@ -62,6 +63,7 @@ export default function RootLayout({
         style={themeCssVariables as CSSProperties}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <AuthSessionSync />
         {children}
       </body>
     </html>

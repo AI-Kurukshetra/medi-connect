@@ -22,13 +22,38 @@ const statusTone = {
 export default async function AdherencePage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
-  const fallbackItems = patientJourney.adherence.map((item, index) => ({
-    id: item.id,
-    scheduled_for: `2026-03-${14 + index}T${index === 0 ? "20:00:00" : index === 1 ? "19:30:00" : "10:00:00"}Z`,
-    status: item.status,
-    note: item.note,
-    updated_at: `2026-03-${14 + index}T12:00:00Z`,
-  }));
+  const fallbackItems =
+    context.role === "provider"
+      ? [
+          {
+            id: "provider-adherence-1",
+            scheduled_for: "2026-03-14T18:30:00Z",
+            status: "missed" as const,
+            note: "AI flagged one delayed check-in and recommended same-day outreach.",
+            updated_at: "2026-03-14T18:45:00Z",
+          },
+          {
+            id: "provider-adherence-2",
+            scheduled_for: "2026-03-13T19:00:00Z",
+            status: "taken" as const,
+            note: "Patient completed onboarding steps after reminder timing was clarified.",
+            updated_at: "2026-03-13T20:00:00Z",
+          },
+          {
+            id: "provider-adherence-3",
+            scheduled_for: "2026-03-17T10:00:00Z",
+            status: "upcoming" as const,
+            note: "Next provider review is scheduled after the first full week of therapy.",
+            updated_at: "2026-03-14T09:00:00Z",
+          },
+        ]
+      : patientJourney.adherence.map((item, index) => ({
+          id: item.id,
+          scheduled_for: `2026-03-${14 + index}T${index === 0 ? "20:00:00" : index === 1 ? "19:30:00" : "10:00:00"}Z`,
+          status: item.status,
+          note: item.note,
+          updated_at: `2026-03-${14 + index}T12:00:00Z`,
+        }));
   let items: Array<{
     id: string;
     scheduled_for: string | null;
@@ -57,7 +82,11 @@ export default async function AdherencePage() {
           className={themeClassNames.heroSectionCard}
           eyebrow={`${context.role} adherence`}
           title="Adherence timeline"
-          description="Dose tracking, notes, and status now sit inside the same dashboard shell as the rest of the care journey."
+          description={
+            context.role === "provider"
+              ? "Risk flags, patient notes, and follow-up timing stay visible in one provider review lane."
+              : "Dose tracking, notes, and status now sit inside the same dashboard shell as the rest of the care journey."
+          }
         >
           <div className="mb-6 flex flex-wrap gap-2">
             <StatusPill tone="accent">Shared route</StatusPill>
@@ -87,8 +116,16 @@ export default async function AdherencePage() {
 
         <SectionCard
           eyebrow="What changes"
-          title="The page feels connected to the rest of the product"
-          description="It is now easier to move from adherence events to reminders, support, or follow-up messages."
+          title={
+            context.role === "provider"
+              ? "Provider follow-up stays close to the signal"
+              : "The page feels connected to the rest of the product"
+          }
+          description={
+            context.role === "provider"
+              ? "You can review patient adherence context without losing access to reminders, drafts, or support."
+              : "It is now easier to move from adherence events to reminders, support, or follow-up messages."
+          }
         >
           <div className="space-y-3">
             <div className={themeClassNames.subtlePanel}>

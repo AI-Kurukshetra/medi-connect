@@ -22,14 +22,42 @@ const statusTone = {
 export default async function RemindersPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
-  const fallbackItems = patientJourney.reminders.map((reminder, index) => ({
-    id: reminder.id,
-    title: reminder.title,
-    send_at: `2026-03-${15 + index}T${index === 0 ? "19:00:00" : index === 1 ? "19:30:00" : "09:00:00"}Z`,
-    window_label: reminder.window,
-    channel: reminder.channel,
-    status: (index === 2 ? "sent" : "scheduled") as "scheduled" | "sent" | "cancelled",
-  }));
+  const fallbackItems =
+    context.role === "provider"
+      ? [
+          {
+            id: "provider-reminder-1",
+            title: "Baseline follow-up nudge",
+            send_at: "2026-03-16T13:30:00Z",
+            window_label: "Monday at 7:00 PM",
+            channel: "SMS + in-app",
+            status: "scheduled" as const,
+          },
+          {
+            id: "provider-reminder-2",
+            title: "First dose check-in",
+            send_at: "2026-03-17T19:00:00Z",
+            window_label: "Tuesday at 7:30 PM",
+            channel: "In-app",
+            status: "scheduled" as const,
+          },
+          {
+            id: "provider-reminder-3",
+            title: "Refill planning reminder",
+            send_at: "2026-03-14T08:30:00Z",
+            window_label: "Sent this morning",
+            channel: "Email",
+            status: "sent" as const,
+          },
+        ]
+      : patientJourney.reminders.map((reminder, index) => ({
+          id: reminder.id,
+          title: reminder.title,
+          send_at: `2026-03-${15 + index}T${index === 0 ? "19:00:00" : index === 1 ? "19:30:00" : "09:00:00"}Z`,
+          window_label: reminder.window,
+          channel: reminder.channel,
+          status: (index === 2 ? "sent" : "scheduled") as "scheduled" | "sent" | "cancelled",
+        }));
   let reminderItems: Array<{
     id: string;
     title: string;
@@ -59,7 +87,11 @@ export default async function RemindersPage() {
           className={themeClassNames.heroSectionCard}
           eyebrow={`${context.role} reminders`}
           title="Reminder center"
-          description="This route now feels like part of the dashboard, not an isolated list."
+          description={
+            context.role === "provider"
+              ? "Provider reminder timing, channels, and outreach coverage stay visible in one review surface."
+              : "This route now feels like part of the dashboard, not an isolated list."
+          }
         >
           <div className="mb-6 flex flex-wrap gap-2">
             <StatusPill tone="accent">Notification timeline</StatusPill>
@@ -89,7 +121,11 @@ export default async function RemindersPage() {
 
         <SectionCard
           eyebrow="What users get"
-          title="Reminder timing is easier to scan"
+          title={
+            context.role === "provider"
+              ? "Patient outreach timing is easier to scan"
+              : "Reminder timing is easier to scan"
+          }
           description="Window labels, channels, and send times sit on stronger cards with clearer hierarchy."
         >
           <div className="space-y-3">

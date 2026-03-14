@@ -202,6 +202,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       const supabase = getSupabaseBrowserClient();
 
       if (isSignUp) {
+        await supabase.auth.signOut();
+        await fetch("/api/auth/session", { method: "DELETE" });
+
         const redirectBase =
           typeof window === "undefined"
             ? process.env.NEXT_PUBLIC_APP_URL
@@ -231,7 +234,11 @@ export function AuthForm({ mode }: AuthFormProps) {
           await fetch("/api/auth/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken: data.session.access_token }),
+            body: JSON.stringify({
+              accessToken: data.session.access_token,
+              role,
+              fullName: fullName.trim(),
+            }),
           });
           router.replace("/dashboard");
           router.refresh();

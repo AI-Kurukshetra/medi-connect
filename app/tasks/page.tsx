@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AddTaskButton } from "@/components/add-task-button";
 import { PostLoginShell } from "@/components/post-login-shell";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
@@ -89,15 +89,55 @@ function getTaskPriority(task: TaskRecord): TaskPriority {
 export default async function TasksPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
-  const fallbackTasks = patientJourney.careTasks.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    status: task.status,
-    due_label: task.dueLabel,
-    source: task.source,
-    updated_at: `2026-03-14T0${index + 8}:00:00.000Z`,
-  }));
+  const fallbackTasks =
+    context.role === "provider"
+      ? [
+          {
+            id: "provider-task-symptom-review",
+            title: "Review Maya Patel's symptom baseline",
+            description: "AI flagged two responses that need provider sign-off before the next dose.",
+            status: "current" as const,
+            due_label: "Due today",
+            source: "ai" as const,
+            updated_at: "2026-03-14T10:15:00.000Z",
+          },
+          {
+            id: "provider-task-reminder-approval",
+            title: "Approve first-dose reminder window",
+            description: "Patient selected Tuesday at 7:30 PM for prep and follow-up nudges.",
+            status: "current" as const,
+            due_label: "Before 5:00 PM",
+            source: "manual" as const,
+            updated_at: "2026-03-14T09:45:00.000Z",
+          },
+          {
+            id: "provider-task-outreach",
+            title: "Send follow-up after missed check-in",
+            description: "A draft message is ready for approval in the provider review lane.",
+            status: "upcoming" as const,
+            due_label: "Tomorrow morning",
+            source: "ai" as const,
+            updated_at: "2026-03-13T17:20:00.000Z",
+          },
+          {
+            id: "provider-task-refill",
+            title: "Confirm refill readiness",
+            description: "Inventory and reminder timing both need one final review before outreach.",
+            status: "complete" as const,
+            due_label: "Completed today",
+            source: "manual" as const,
+            updated_at: "2026-03-14T08:00:00.000Z",
+          },
+        ]
+      : patientJourney.careTasks.map((task, index) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          due_label: task.dueLabel,
+          source: task.source,
+          updated_at: `2026-03-14T0${index + 8}:00:00.000Z`,
+        }));
   let taskItems: TaskRecord[] = fallbackTasks;
 
   if (patientProfileId) {
@@ -130,12 +170,7 @@ export default async function TasksPage() {
             </p>
           </div>
 
-          <Link
-            href={context.role === "provider" ? "/ai-insights" : "/support"}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_20px_34px_-20px_rgba(59,130,246,0.75)] transition hover:brightness-[1.03]"
-          >
-            Add Task
-          </Link>
+          <AddTaskButton patientProfileId={patientProfileId} />
         </div>
 
         <div className="mt-7 flex gap-6 border-b border-slate-200">

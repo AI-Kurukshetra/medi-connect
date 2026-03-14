@@ -16,24 +16,44 @@ export const metadata: Metadata = {
 export default async function MessagesPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
-  const fallbackDrafts = [
-    {
-      id: patientJourney.messageDraft.id,
-      author_role: patientJourney.messageDraft.authorRole,
-      subject: patientJourney.messageDraft.subject,
-      body: patientJourney.messageDraft.body,
-      approved: patientJourney.messageDraft.approved,
-      updated_at: "2026-03-14T09:00:00Z",
-    },
-    {
-      id: "draft-provider-follow-up",
-      author_role: "provider" as const,
-      subject: "Follow-up after your first Humira dose",
-      body: "Hi Maya, I reviewed your checklist progress. Please submit the symptom baseline tonight and message us if you notice anything unexpected after the dose.",
-      approved: true,
-      updated_at: "2026-03-13T15:30:00Z",
-    },
-  ];
+  const fallbackDrafts =
+    context.role === "provider"
+      ? [
+          {
+            id: "provider-draft-baseline",
+            author_role: "provider" as const,
+            subject: "Please complete your symptom baseline tonight",
+            body: "Hi Maya, I reviewed your setup progress. Please complete the symptom baseline tonight so we can confirm your dose plan before tomorrow.",
+            approved: false,
+            updated_at: "2026-03-14T09:00:00Z",
+          },
+          {
+            id: "provider-draft-check-in",
+            author_role: "provider" as const,
+            subject: "Quick check-in after your first Humira dose",
+            body: "Thanks for staying on track. If you notice redness that lasts longer than 48 hours or anything feels unusual, send us a message and we will review it quickly.",
+            approved: true,
+            updated_at: "2026-03-13T15:30:00Z",
+          },
+        ]
+      : [
+          {
+            id: patientJourney.messageDraft.id,
+            author_role: patientJourney.messageDraft.authorRole,
+            subject: patientJourney.messageDraft.subject,
+            body: patientJourney.messageDraft.body,
+            approved: patientJourney.messageDraft.approved,
+            updated_at: "2026-03-14T09:00:00Z",
+          },
+          {
+            id: "draft-provider-follow-up",
+            author_role: "provider" as const,
+            subject: "Follow-up after your first Humira dose",
+            body: "Hi Maya, I reviewed your checklist progress. Please submit the symptom baseline tonight and message us if you notice anything unexpected after the dose.",
+            approved: true,
+            updated_at: "2026-03-13T15:30:00Z",
+          },
+        ];
   let draftItems: Array<{
     id: string;
     author_role: "patient" | "provider";
@@ -63,7 +83,11 @@ export default async function MessagesPage() {
           className={themeClassNames.heroSectionCard}
           eyebrow={`${context.role} messages`}
           title="Message drafts"
-          description="Drafted outreach now sits inside the same workspace as tasks, support, and dashboard actions."
+          description={
+            context.role === "provider"
+              ? "Provider outreach, approval state, and follow-up timing now sit in the same workspace as tasks and reminders."
+              : "Drafted outreach now sits inside the same workspace as tasks, support, and dashboard actions."
+          }
         >
           <div className="mb-6 flex flex-wrap gap-2">
             <StatusPill tone="accent">Shared messaging route</StatusPill>
