@@ -14,6 +14,7 @@ This folder is the working product spec for the hackathon build.
 8. [07-vercel-deployment.md](./07-vercel-deployment.md)
 9. [08-main-use-cases.md](./08-main-use-cases.md)
 10. [09-mobile-readiness-blueprint.md](./09-mobile-readiness-blueprint.md)
+11. [10-demo-step-by-step-guide.md](./10-demo-step-by-step-guide.md)
 
 ## Current Product Scope
 

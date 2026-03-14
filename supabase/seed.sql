@@ -7,11 +7,13 @@ declare
   v_patient_user_id uuid;
   v_provider_user_id uuid;
   v_medication_plan_id uuid;
+  v_prior_auth_request_id uuid;
   v_inventory_item_id uuid;
   v_shipment_id uuid;
   v_document_id uuid;
   v_program_id uuid;
   v_invoice_id uuid;
+  v_seed_incident_id uuid;
 begin
   select pp.id, pp.user_id
   into v_patient_profile_id, v_patient_user_id
@@ -92,7 +94,9 @@ begin
   select * from (
     values
       (v_patient_profile_id, 'Injection prep reminder', timezone('utc', now()) + interval '1 day', 'Tomorrow at 7:00 PM', 'in-app', 'scheduled'),
-      (v_patient_profile_id, 'Care team follow-up', timezone('utc', now()) + interval '3 day', 'Thursday at 10:00 AM', 'email', 'scheduled')
+      (v_patient_profile_id, 'Care team follow-up', timezone('utc', now()) + interval '3 day', 'Thursday at 10:00 AM', 'email', 'scheduled'),
+      (v_patient_profile_id, 'Dose day check completed', timezone('utc', now()) - interval '8 hour', 'Today at 8:00 AM', 'sms', 'sent'),
+      (v_patient_profile_id, 'Travel storage reminder', timezone('utc', now()) + interval '7 day', 'Next week', 'email', 'cancelled')
   ) as r(patient_profile_id, title, send_at, window_label, channel, status)
   where not exists (
     select 1
@@ -118,7 +122,8 @@ begin
     select 1
     from public.adherence_check_ins ac
     where ac.patient_profile_id = a.patient_profile_id
-      and ac.scheduled_for = a.scheduled_for
+      and ac.status = a.status
+      and ac.note = a.note
   );
 
   insert into public.message_drafts (
@@ -128,17 +133,28 @@ begin
     body,
     approved
   )
-  select
-    v_patient_profile_id,
-    'provider',
-    'Quick check-in before first dose',
-    'Hi, you are almost ready. Please submit your symptom baseline and confirm your reminder window today.',
-    false
+  select * from (
+    values
+      (
+        v_patient_profile_id,
+        'provider',
+        'Quick check-in before first dose',
+        'Hi, you are almost ready. Please submit your symptom baseline and confirm your reminder window today.',
+        false
+      ),
+      (
+        v_patient_profile_id,
+        'patient',
+        'Question about travel storage',
+        'I may travel with my medication next week. Can you confirm the safest storage plan?',
+        true
+      )
+  ) as md(patient_profile_id, author_role, subject, body, approved)
   where not exists (
     select 1
-    from public.message_drafts md
-    where md.patient_profile_id = v_patient_profile_id
-      and md.subject = 'Quick check-in before first dose'
+    from public.message_drafts existing
+    where existing.patient_profile_id = md.patient_profile_id
+      and existing.subject = md.subject
   );
 
   if v_provider_user_id is not null then
@@ -180,7 +196,8 @@ begin
     diagnosis_code,
     rationale,
     status,
-    submitted_at
+    submitted_at,
+    reviewed_at
   )
   select
     v_patient_profile_id,
@@ -195,14 +212,56 @@ begin
     'Humira',
     'M06.9',
     'Patient requires specialty biologic initiation due to active symptoms.',
-    'submitted',
-    timezone('utc', now()) - interval '6 hour'
+    'payer-review',
+    timezone('utc', now()) - interval '6 hour',
+    timezone('utc', now()) - interval '2 hour'
   where not exists (
     select 1
     from public.prior_auth_requests par
     where par.patient_profile_id = v_patient_profile_id
       and par.medication_name = 'Humira'
   );
+
+  select par.id
+  into v_prior_auth_request_id
+  from public.prior_auth_requests par
+  where par.patient_profile_id = v_patient_profile_id
+    and par.medication_name = 'Humira'
+  order by par.created_at asc
+  limit 1;
+
+  if v_prior_auth_request_id is not null then
+    insert into public.prior_auth_events (
+      prior_auth_request_id,
+      actor_user_id,
+      from_status,
+      to_status,
+      note
+    )
+    select * from (
+      values
+        (
+          v_prior_auth_request_id,
+          coalesce(v_provider_user_id, v_patient_user_id),
+          'draft',
+          'submitted',
+          'Initial prior authorization packet submitted with diagnosis and rationale.'
+        ),
+        (
+          v_prior_auth_request_id,
+          coalesce(v_provider_user_id, v_patient_user_id),
+          'submitted',
+          'payer-review',
+          'Payer intake acknowledged and moved to active review.'
+        )
+    ) as pae(prior_auth_request_id, actor_user_id, from_status, to_status, note)
+    where not exists (
+      select 1
+      from public.prior_auth_events existing
+      where existing.prior_auth_request_id = pae.prior_auth_request_id
+        and existing.to_status = pae.to_status
+    );
+  end if;
 
   insert into public.ehr_links (
     patient_profile_id,
@@ -459,6 +518,29 @@ begin
     where i.invoice_number = 'INV-SEED-0001'
   );
 
+  insert into public.invoices (
+    patient_profile_id,
+    invoice_number,
+    amount_cents,
+    currency,
+    status,
+    due_at,
+    issued_at
+  )
+  select
+    v_patient_profile_id,
+    'INV-SEED-0002',
+    8900,
+    'USD',
+    'paid',
+    timezone('utc', now()) - interval '1 day',
+    timezone('utc', now()) - interval '10 day'
+  where not exists (
+    select 1
+    from public.invoices i
+    where i.invoice_number = 'INV-SEED-0002'
+  );
+
   select i.id
   into v_invoice_id
   from public.invoices i
@@ -489,6 +571,36 @@ begin
       where p.provider_ref = 'mock_ch_seed_0001'
     );
   end if;
+
+  insert into public.payments (
+    invoice_id,
+    provider_ref,
+    amount_cents,
+    currency,
+    method,
+    status,
+    metadata,
+    reconciled_at
+  )
+  select
+    (
+      select i.id
+      from public.invoices i
+      where i.invoice_number = 'INV-SEED-0002'
+      limit 1
+    ),
+    'mock_ch_seed_0002',
+    8900,
+    'USD',
+    'ach',
+    'reconciled',
+    '{"adapterProvider":"mock","reconciledBy":"seed-script"}'::jsonb,
+    timezone('utc', now()) - interval '12 hour'
+  where not exists (
+    select 1
+    from public.payments p
+    where p.provider_ref = 'mock_ch_seed_0002'
+  );
 
   insert into public.emergency_contacts (
     patient_profile_id,
@@ -536,6 +648,58 @@ begin
       and ei.source = 'seed'
   );
 
+  select ei.id
+  into v_seed_incident_id
+  from public.escalation_incidents ei
+  where ei.patient_profile_id = v_patient_profile_id
+    and ei.source = 'seed'
+  order by ei.created_at asc
+  limit 1;
+
+  insert into public.adverse_events (
+    patient_profile_id,
+    reported_by_user_id,
+    symptom_text,
+    severity,
+    status
+  )
+  select
+    v_patient_profile_id,
+    coalesce(v_provider_user_id, v_patient_user_id),
+    'Mild injection-site redness for 24 hours after dose.',
+    'low',
+    'reviewed'
+  where not exists (
+    select 1
+    from public.adverse_events ae
+    where ae.patient_profile_id = v_patient_profile_id
+      and ae.symptom_text = 'Mild injection-site redness for 24 hours after dose.'
+  );
+
+  if v_seed_incident_id is not null then
+    insert into public.adverse_events (
+      patient_profile_id,
+      reported_by_user_id,
+      symptom_text,
+      severity,
+      status,
+      linked_incident_id
+    )
+    select
+      v_patient_profile_id,
+      coalesce(v_provider_user_id, v_patient_user_id),
+      'Persistent dizziness and chest tightness reported after evening dose.',
+      'high',
+      'linked_to_incident',
+      v_seed_incident_id
+    where not exists (
+      select 1
+      from public.adverse_events ae
+      where ae.patient_profile_id = v_patient_profile_id
+        and ae.symptom_text = 'Persistent dizziness and chest tightness reported after evening dose.'
+    );
+  end if;
+
   insert into public.risk_predictions (
     patient_profile_id,
     model_name,
@@ -559,6 +723,56 @@ begin
     where rp.patient_profile_id = v_patient_profile_id
       and rp.model_name = 'mock-adherence-risk-v1'
       and rp.risk_type = 'adherence'
+  );
+
+  insert into public.risk_predictions (
+    patient_profile_id,
+    model_name,
+    risk_type,
+    risk_score,
+    risk_level,
+    explanation,
+    requires_human_approval
+  )
+  select
+    v_patient_profile_id,
+    'mock-adverse-event-v1',
+    'adverse-event',
+    0.78,
+    'high',
+    '{"reported_severity":"high","trigger_phrase_match":true}'::jsonb,
+    true
+  where not exists (
+    select 1
+    from public.risk_predictions rp
+    where rp.patient_profile_id = v_patient_profile_id
+      and rp.model_name = 'mock-adverse-event-v1'
+      and rp.risk_type = 'adverse-event'
+  );
+
+  insert into public.risk_predictions (
+    patient_profile_id,
+    model_name,
+    risk_type,
+    risk_score,
+    risk_level,
+    explanation,
+    requires_human_approval
+  )
+  select
+    v_patient_profile_id,
+    'mock-general-risk-v1',
+    'general',
+    0.33,
+    'medium',
+    '{"recent_context":"stable adherence trend with one missed check-in"}'::jsonb,
+    true
+  where not exists (
+    select 1
+    from public.risk_predictions rp
+    where rp.patient_profile_id = v_patient_profile_id
+      and rp.model_name = 'mock-general-risk-v1'
+      and rp.risk_type = 'general'
   );
 
   insert into public.iot_devices (
@@ -607,6 +821,40 @@ begin
     from public.iot_events ie
     where ie.event_type = 'dose_compartment_opened'
       and ie.patient_profile_id = v_patient_profile_id
+  );
+
+  insert into public.audit_events (
+    actor_user_id,
+    actor_role,
+    action,
+    resource_type,
+    resource_id,
+    trace_id,
+    scope_context,
+    metadata
+  )
+  select
+    coalesce(v_provider_user_id, v_patient_user_id),
+    case
+      when v_provider_user_id is not null then 'provider'
+      else 'patient'
+    end,
+    'seed.demo.bootstrap',
+    'patient_profile',
+    v_patient_profile_id,
+    'seed-trace-demo-bootstrap',
+    jsonb_build_object(
+      'patientProfileId',
+      v_patient_profile_id::text,
+      'module',
+      'seed'
+    ),
+    '{"source":"seed.sql","purpose":"demo-bootstrap"}'::jsonb
+  where not exists (
+    select 1
+    from public.audit_events ae
+    where ae.trace_id = 'seed-trace-demo-bootstrap'
+      and ae.action = 'seed.demo.bootstrap'
   );
 
   raise notice 'seed complete for patient_profile_id: %', v_patient_profile_id;
