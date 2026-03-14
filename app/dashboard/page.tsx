@@ -118,6 +118,9 @@ function ProviderQueueCard({
         <Link
           href={actionHref}
           className="inline-flex h-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-4 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(59,130,246,0.8)] transition hover:-translate-y-0.5 hover:brightness-[1.03]"
+          style={{
+            color: 'white'
+          }}
         >
           {actionLabel}
         </Link>
@@ -456,6 +459,9 @@ export default async function DashboardPage() {
                   <Link
                     href="/messages"
                     className="inline-flex items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(59,130,246,0.75)] transition hover:-translate-y-0.5 hover:brightness-[1.03]"
+                    style={{
+                      color: 'white'
+                    }}
                   >
                     Approve outreach
                   </Link>

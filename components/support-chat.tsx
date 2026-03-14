@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cx } from "@/theme";
 
 interface Message {
@@ -27,24 +27,87 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+/** Minimal markdown → React nodes: bold, italic, bullet lists, line breaks */
+function renderMarkdown(text: string): React.ReactNode[] {
+  const lines = text.split("\n");
+  const result: React.ReactNode[] = [];
+
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li];
+
+    // Bullet line
+    const bulletMatch = /^[\*\-]\s+(.+)$/.exec(line);
+    if (bulletMatch) {
+      result.push(
+        <div key={li} className="flex items-start gap-2 my-0.5">
+          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-60" />
+          <span>{inlineMarkdown(bulletMatch[1])}</span>
+        </div>,
+      );
+      continue;
+    }
+
+    // Heading (### or ##)
+    const headingMatch = /^#{1,3}\s+(.+)$/.exec(line);
+    if (headingMatch) {
+      result.push(
+        <p key={li} className="font-semibold mt-2 mb-0.5">{inlineMarkdown(headingMatch[1])}</p>,
+      );
+      continue;
+    }
+
+    // Empty line → spacer
+    if (line.trim() === "") {
+      result.push(<br key={li} />);
+      continue;
+    }
+
+    // Normal paragraph line
+    result.push(<p key={li}>{inlineMarkdown(line)}</p>);
+  }
+
+  return result;
+}
+
+function inlineMarkdown(text: string): React.ReactNode[] {
+  // Split on **bold** and *italic*
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (/^\*[^*]+\*$/.test(part)) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
+
+const INITIAL_MESSAGE = (roleMode: "patient" | "provider"): Message => ({
+  id: "welcome",
+  role: "assistant",
+  content:
+    roleMode === "provider"
+      ? "Hi! I'm MediBot, your MediConnect support assistant. I can help with workflow questions, patient summaries, or how to navigate the portal. What do you need?"
+      : "Hi! I'm MediBot, your MediConnect support assistant. I can help you understand your medication journey, tasks, reminders, and how to use the portal. What would you like to know?",
+  timestamp: new Date(),
+});
+
 export function SupportChat({ roleMode }: SupportChatProps) {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        roleMode === "provider"
-          ? "Hi! I'm your MediConnect support assistant. I can help with workflow questions, patient summaries, or how to navigate the portal. What do you need?"
-          : "Hi! I'm your MediConnect support assistant. I can help you understand your medication journey, tasks, reminders, and how to use the portal. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [isPending, startTransition] = useTransition();
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE(roleMode)]);
+  const [isPending, setIsPending] = useState(false);
   const [thinkingStep, setThinkingStep] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const thinkingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function clearChat() {
+    setMessages([INITIAL_MESSAGE(roleMode)]);
+    setInput("");
+    setIsPending(false);
+    if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+  }
 
   const THINKING_STEPS = [
     "Agent is thinking…",
@@ -86,46 +149,47 @@ export function SupportChat({ roleMode }: SupportChatProps) {
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsPending(true);
 
-    startTransition(() => {
-      void (async () => {
-        try {
-          const response = await fetch("/api/support/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: trimmed, module: "support" }),
-          });
-          const data = (await response.json()) as {
-            data?: { answer?: string };
-            error?: string;
-          };
+    void (async () => {
+      try {
+        const response = await fetch("/api/support/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: trimmed, module: "support" }),
+        });
+        const data = (await response.json()) as {
+          data?: { answer?: string };
+          error?: string;
+        };
 
-          const content = !response.ok
-            ? (data.error ?? "Support bot is unavailable right now.")
-            : (data.data?.answer ?? "I didn't get a response. Please try again.");
+        const content = !response.ok
+          ? (data.error ?? "Support bot is unavailable right now.")
+          : (data.data?.answer ?? "I didn't get a response. Please try again.");
 
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `a-${Date.now()}`,
-              role: !response.ok ? "error" : "assistant",
-              content,
-              timestamp: new Date(),
-            },
-          ]);
-        } catch {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `e-${Date.now()}`,
-              role: "error",
-              content: "Support bot is unavailable right now. Please try again.",
-              timestamp: new Date(),
-            },
-          ]);
-        }
-      })();
-    });
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            role: !response.ok ? "error" : "assistant",
+            content,
+            timestamp: new Date(),
+          },
+        ]);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `e-${Date.now()}`,
+            role: "error",
+            content: "Support bot is unavailable right now. Please try again.",
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setIsPending(false);
+      }
+    })();
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -141,25 +205,41 @@ export function SupportChat({ roleMode }: SupportChatProps) {
       style={{ height: "620px" }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#101a33,#1e3069)] px-5 py-4 shrink-0">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <div className="flex items-center gap-3 border-b border-white/10 bg-[linear-gradient(135deg,#0f1f45,#1a3070)] px-5 py-4 shrink-0">
+        {/* Bot avatar */}
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/20">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
               d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"
-              fill="rgba(255,255,255,0.2)"
+              fill="rgba(255,255,255,0.15)"
               stroke="white"
-              strokeWidth="1.4"
+              strokeWidth="1.5"
             />
-            <path d="M8 10h8M8 14h5" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+            <path d="M8 10h8M8 14h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">MediConnect Support</p>
-          <p className="text-[11px] text-blue-200">AI assistant · {roleMode} mode</p>
+          <p className="text-sm font-bold text-white tracking-wide">MediBot</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+            <p className="text-[11px] text-blue-200">AI Assistant · Online</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]" />
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">Online</span>
+        {/* Action buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={clearChat}
+            title="Start new conversation"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M21 3v5h-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M8 16H3v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -224,13 +304,7 @@ export function SupportChat({ roleMode }: SupportChatProps) {
                       : "rounded-tl-sm border border-slate-200 bg-white text-slate-800 shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)]",
                 )}
               >
-                {msg.content.split("\n").map((line, i, arr) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: static render
-                  <span key={i}>
-                    {line}
-                    {i < arr.length - 1 && <br />}
-                  </span>
-                ))}
+                {renderMarkdown(msg.content)}
               </div>
               <span className="text-[10px] text-slate-400">{formatTime(msg.timestamp)}</span>
             </div>
@@ -292,7 +366,7 @@ export function SupportChat({ roleMode }: SupportChatProps) {
             onKeyDown={handleKeyDown}
             disabled={isPending}
             rows={1}
-            placeholder="Ask something… (Enter to send, Shift+Enter for new line)"
+            placeholder="Type your question… (Enter to send)"
             className="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-60 max-h-28 overflow-y-auto"
             style={{ lineHeight: "1.6" }}
           />
@@ -307,9 +381,13 @@ export function SupportChat({ roleMode }: SupportChatProps) {
             </svg>
           </button>
         </form>
-        <p className="mt-1.5 text-center text-[10px] text-slate-400">
-          AI may produce inaccurate information · Not a substitute for medical advice
-        </p>
+        <div className="mt-2 flex items-center justify-center gap-1.5">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-slate-400">
+            <rect x="5" y="11" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <p className="text-[10px] text-slate-400">Secured by MediConnect AI · Not a substitute for medical advice</p>
+        </div>
       </div>
     </div>
   );

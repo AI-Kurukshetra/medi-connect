@@ -240,8 +240,8 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
 
   return (
     <div className="min-h-screen bg-[#edf2f8] p-1.5 sm:p-2.5">
-      <div className="flex min-h-[calc(100vh-0.75rem)] overflow-hidden rounded-[28px] border border-[#d8e0ef] bg-[#f4f7fb] shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] sm:min-h-[calc(100vh-1.25rem)]">
-        <aside className="hidden w-[260px] shrink-0 flex-col bg-[linear-gradient(180deg,#111a30_0%,#0f172a_52%,#11182b_100%)] px-5 py-5 lg:flex">
+      <div className="flex h-[calc(100vh-0.75rem)] overflow-hidden rounded-[28px] border border-[#d8e0ef] bg-[#f4f7fb] shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] sm:h-[calc(100vh-1.25rem)]">
+        <aside className="hidden min-h-0 w-[260px] shrink-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#111a30_0%,#0f172a_52%,#11182b_100%)] px-5 py-5 lg:flex">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2563eb] text-white shadow-[0_12px_24px_-16px_rgba(37,99,235,0.85)]">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -258,34 +258,38 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
             </div>
           </Link>
 
-          <nav className="mt-8 space-y-1">
-            {primaryRoutes.map((item) => (
-              <SidebarLink key={item.href} currentPath={currentPath} item={item} />
-            ))}
-          </nav>
+          <div className="mt-8 flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-1">
+              <nav className="space-y-1">
+                {primaryRoutes.map((item) => (
+                  <SidebarLink key={item.href} currentPath={currentPath} item={item} />
+                ))}
+              </nav>
 
-          <div className="mt-6 px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-            Settings
-          </div>
+              <div className="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Settings
+              </div>
 
-          <nav className="mt-2 space-y-1">
-            {secondaryRoutes.map((item) => (
-              <SidebarLink key={item.href} currentPath={currentPath} item={item} />
-            ))}
-            {roleRoutes[context.role].map((item) => (
-              <SidebarLink key={item.href} currentPath={currentPath} item={item} />
-            ))}
-          </nav>
+              <nav className="space-y-1">
+                {secondaryRoutes.map((item) => (
+                  <SidebarLink key={item.href} currentPath={currentPath} item={item} />
+                ))}
+                {roleRoutes[context.role].map((item) => (
+                  <SidebarLink key={item.href} currentPath={currentPath} item={item} />
+                ))}
+              </nav>
+            </div>
 
-          <div className="mt-auto border-t border-slate-800 pt-4">
-            <SignOutButton className="w-full justify-start gap-3 border-slate-800 bg-transparent px-3 text-slate-400 shadow-none hover:bg-slate-800 hover:text-white">
-              <SidebarGlyph icon="logout" />
-              <span>Sign Out</span>
-            </SignOutButton>
+            <div className="mt-4 shrink-0 border-t border-slate-800/90 pt-4">
+              <SignOutButton className="w-full justify-start gap-3 rounded-2xl border border-slate-800 bg-slate-950/20 px-3 text-slate-300 shadow-none hover:bg-slate-800 hover:text-white">
+                <SidebarGlyph icon="logout" />
+                <span>Sign Out</span>
+              </SignOutButton>
+            </div>
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <label className="flex min-w-[240px] flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500">
@@ -329,7 +333,7 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
 
           <MobileRouteStrip currentPath={currentPath} items={mobileRoutes} />
 
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
       </div>
     </div>

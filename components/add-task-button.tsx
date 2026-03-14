@@ -7,12 +7,88 @@ type AddTaskButtonProps = {
   patientProfileId?: string | null;
 };
 
+type DuePreset = "today" | "tomorrow" | "this-week" | "next-week";
+
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildPresetDate(preset: DuePreset) {
+  const date = new Date();
+
+  if (preset === "tomorrow") {
+    date.setDate(date.getDate() + 1);
+  }
+
+  if (preset === "this-week") {
+    date.setDate(date.getDate() + 3);
+  }
+
+  if (preset === "next-week") {
+    date.setDate(date.getDate() + 7);
+  }
+
+  return date;
+}
+
+function getDueLabel(input: string) {
+  if (!input) return null;
+
+  const selected = new Date(`${input}T12:00:00`);
+  if (Number.isNaN(selected.getTime())) return null;
+
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  const selectedDay = selected.toDateString();
+  if (selectedDay === today.toDateString()) {
+    return "Due today";
+  }
+
+  if (selectedDay === tomorrow.toDateString()) {
+    return "Due tomorrow";
+  }
+
+  return `Due ${selected.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })}`;
+}
+
+function getDueAt(input: string) {
+  if (!input) return null;
+
+  const selected = new Date(`${input}T12:00:00`);
+  if (Number.isNaN(selected.getTime())) return null;
+
+  return selected.toISOString();
+}
+
 export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dueDate, setDueDate] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState<DuePreset | null>(null);
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
+
+  function resetDialogState() {
+    setOpen(false);
+    setError(null);
+    setDueDate("");
+    setSelectedPreset(null);
+  }
+
+  function applyPreset(preset: DuePreset) {
+    setSelectedPreset(preset);
+    setDueDate(toDateInputValue(buildPresetDate(preset)));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,12 +97,17 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
 
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form));
+    const description =
+      typeof data.description === "string" && data.description.trim().length > 0
+        ? data.description.trim()
+        : "No additional notes provided.";
 
     const body: Record<string, unknown> = {
       title: data.title,
-      description: data.description || "",
+      description,
       status: data.status,
-      dueLabel: data.dueLabel || null,
+      dueLabel: getDueLabel(dueDate),
+      dueAt: getDueAt(dueDate),
       source: "manual",
     };
     if (patientProfileId) body.patientProfileId = patientProfileId;
@@ -42,7 +123,7 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
         throw new Error(json.error ?? "Failed to create task");
       }
       form.reset();
-      setOpen(false);
+      resetDialogState();
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -59,6 +140,8 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
         onClick={() => {
           setOpen(true);
           setError(null);
+          setDueDate("");
+          setSelectedPreset(null);
           setTimeout(() => titleRef.current?.focus(), 50);
         }}
         className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] px-5 py-2.5 text-sm font-semibold tracking-[-0.01em] text-white shadow-[0_20px_34px_-20px_rgba(59,130,246,0.75)] transition hover:brightness-[1.04] active:scale-[0.98]"
@@ -73,7 +156,7 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
       {open && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-[2px]"
-          onClick={() => setOpen(false)}
+          onClick={resetDialogState}
           aria-hidden="true"
         />
       )}
@@ -101,7 +184,7 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
           </div>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={resetDialogState}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
             aria-label="Close"
           >
@@ -112,7 +195,7 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
           {/* Title */}
           <div className="space-y-1.5">
             <label htmlFor="task-title" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
@@ -168,12 +251,67 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
               </label>
               <input
                 id="task-due"
-                name="dueLabel"
-                type="text"
-                maxLength={60}
-                placeholder="e.g. Tomorrow, Mar 20"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                name="dueDate"
+                type="date"
+                value={dueDate}
+                min={toDateInputValue(new Date())}
+                onChange={(event) => {
+                  setSelectedPreset(null);
+                  setDueDate(event.target.value);
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Quick date options
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPreset(null);
+                  setDueDate("");
+                }}
+                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 transition hover:text-slate-600"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                { value: "today" as const, label: "Today" },
+                { value: "tomorrow" as const, label: "Tomorrow" },
+                { value: "this-week" as const, label: "This Week" },
+                { value: "next-week" as const, label: "Next Week" },
+              ].map((preset) => {
+                const active = selectedPreset === preset.value;
+
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => applyPreset(preset.value)}
+                    className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                      active
+                        ? "border-blue-200 bg-[linear-gradient(135deg,#edf3ff,#dce7ff)] text-[#2f6cf0] shadow-[0_10px_20px_-18px_rgba(59,130,246,0.9)]"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#f7faff)] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Selected due date
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                {getDueLabel(dueDate) ?? "No due date selected yet"}
+              </p>
             </div>
           </div>
 
@@ -188,7 +326,7 @@ export function AddTaskButton({ patientProfileId }: AddTaskButtonProps) {
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={resetDialogState}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
             >
               Cancel

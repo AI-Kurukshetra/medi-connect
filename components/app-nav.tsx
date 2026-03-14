@@ -3,10 +3,10 @@ import Link from "next/link";
 import { appTheme, cx, themeClassNames } from "@/theme";
 
 const marketingLinks = [
-  { href: "#story", label: "Story" },
-  { href: "#roles", label: "Roles" },
-  { href: "#workspace", label: "Workspace" },
-  { href: "#launch", label: "Launch" },
+  { href: "/", label: "Home" },
+  { href: "/patients", label: "Patients" },
+  { href: "/providers", label: "Providers" },
+  { href: "/platform", label: "Platform" },
 ] as const;
 
 interface AppNavProps {
@@ -38,7 +38,11 @@ export function AppNav({ currentPath }: AppNavProps) {
       <div className="flex flex-col gap-3 lg:items-end">
         <nav className="flex flex-wrap gap-2">
           {marketingLinks.map((link) => (
-            <Link key={link.href} href={link.href} className={themeClassNames.navLink}>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={currentPath === link.href ? themeClassNames.navLinkActive : themeClassNames.navLink}
+            >
               {link.label}
             </Link>
           ))}
