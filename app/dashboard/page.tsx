@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PostLoginShell } from "@/components/post-login-shell";
-import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { requireAuthContext } from "@/lib/auth/server";
 import { getDashboardCounts, getScopedPatientProfile } from "@/lib/data/post-login";
 import { patientJourney } from "@/lib/mock-data";
@@ -46,7 +45,7 @@ function DashboardMetricCard({
         <div className={cx("rounded-xl p-2.5", accentClassName)}>
           <span className={cx("block h-2.5 w-2.5 rounded-full", dotClassName)} />
         </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
           {detail}
         </span>
       </div>
@@ -63,24 +62,11 @@ export default async function DashboardPage() {
     getDashboardCounts(context),
   ]);
 
-  if (!profile) {
-    return (
-      <PostLoginShell currentPath="/dashboard">
-        <RoleAwareEmptyState
-          roleMode={context.role}
-          title="Dashboard is not available yet"
-          description="No scoped patient profile exists for this session. Link a patient profile first."
-          ctaHref="/support"
-          ctaLabel="Open support"
-        />
-      </PostLoginShell>
-    );
-  }
-
   const isProvider = context.role === "provider";
   const firstName = context.fullName.split(" ")[0] ?? context.fullName;
   const openTasks = patientJourney.careTasks.filter((task) => task.status !== "complete");
-  const appointmentLabel = formatAppointmentLabel(profile.next_appointment_at);
+  const appointmentLabel = formatAppointmentLabel(profile?.next_appointment_at);
+  const conditionName = profile?.condition_name ?? patientJourney.profile.condition;
   const progressPercent = isProvider ? 88 : 92;
   const completedSessions = isProvider ? "11/14" : "14/16";
   const milestoneCopy = isProvider
@@ -89,129 +75,129 @@ export default async function DashboardPage() {
 
   const metricCards = isProvider
     ? [
-        {
-          label: "Active blockers",
-          value: String(patientJourney.providerSummary.blockers.length),
-          detail: "Needs follow-up",
-          accentClassName: "bg-amber-50",
-          dotClassName: "bg-amber-500",
-        },
-        {
-          label: "Patient tasks",
-          value: String(counts.taskCount || patientJourney.careTasks.length),
-          detail: "Open board",
-          accentClassName: "bg-blue-50",
-          dotClassName: "bg-blue-500",
-        },
-        {
-          label: "Reminders",
-          value: String(counts.reminderCount || patientJourney.reminders.length),
-          detail: "Upcoming",
-          accentClassName: "bg-indigo-50",
-          dotClassName: "bg-indigo-500",
-        },
-        {
-          label: "Messages",
-          value: String(counts.messageCount || 1),
-          detail: "Needs reply",
-          accentClassName: "bg-rose-50",
-          dotClassName: "bg-rose-500",
-        },
-      ]
+      {
+        label: "Active blockers",
+        value: String(patientJourney.providerSummary.blockers.length),
+        detail: "Needs follow-up",
+        accentClassName: "bg-amber-50",
+        dotClassName: "bg-amber-500",
+      },
+      {
+        label: "Patient tasks",
+        value: String(counts.taskCount || patientJourney.careTasks.length),
+        detail: "Open board",
+        accentClassName: "bg-blue-50",
+        dotClassName: "bg-blue-500",
+      },
+      {
+        label: "Reminders",
+        value: String(counts.reminderCount || patientJourney.reminders.length),
+        detail: "Upcoming",
+        accentClassName: "bg-indigo-50",
+        dotClassName: "bg-indigo-500",
+      },
+      {
+        label: "Messages",
+        value: String(counts.messageCount || 1),
+        detail: "Needs reply",
+        accentClassName: "bg-rose-50",
+        dotClassName: "bg-rose-500",
+      },
+    ]
     : [
-        {
-          label: "Tasks",
-          value: String(openTasks.length),
-          detail: "Open",
-          accentClassName: "bg-amber-50",
-          dotClassName: "bg-amber-500",
-        },
-        {
-          label: "Adherence",
-          value: `${progressPercent}%`,
-          detail: "+2% vs LW",
-          accentClassName: "bg-emerald-50",
-          dotClassName: "bg-emerald-500",
-        },
-        {
-          label: "Reminders",
-          value: String(counts.reminderCount || patientJourney.reminders.length),
-          detail: "Upcoming",
-          accentClassName: "bg-blue-50",
-          dotClassName: "bg-blue-500",
-        },
-        {
-          label: "Messages",
-          value: String(counts.messageCount || 1),
-          detail: "Unread",
-          accentClassName: "bg-rose-50",
-          dotClassName: "bg-rose-500",
-        },
-      ];
+      {
+        label: "Tasks",
+        value: String(openTasks.length),
+        detail: "Open",
+        accentClassName: "bg-amber-50",
+        dotClassName: "bg-amber-500",
+      },
+      {
+        label: "Adherence",
+        value: `${progressPercent}%`,
+        detail: "+2% vs LW",
+        accentClassName: "bg-emerald-50",
+        dotClassName: "bg-emerald-500",
+      },
+      {
+        label: "Reminders",
+        value: String(counts.reminderCount || patientJourney.reminders.length),
+        detail: "Upcoming",
+        accentClassName: "bg-blue-50",
+        dotClassName: "bg-blue-500",
+      },
+      {
+        label: "Messages",
+        value: String(counts.messageCount || 1),
+        detail: "Unread",
+        accentClassName: "bg-rose-50",
+        dotClassName: "bg-rose-500",
+      },
+    ];
 
   const taskRows = isProvider
     ? [
-        {
-          title: "Review symptom baseline",
-          subtitle: "Patient response needed before the next call",
-          actionLabel: "Open chart",
-          locked: false,
-        },
-        {
-          title: "Approve reminder window",
-          subtitle: "Patient selected Tuesday at 7:30 PM",
-          actionLabel: "Approve",
-          locked: false,
-        },
-        {
-          title: "Confirm follow-up note",
-          subtitle: `Visit scheduled for ${appointmentLabel}`,
-          actionLabel: "Locked",
-          locked: true,
-        },
-      ]
+      {
+        title: "Review symptom baseline",
+        subtitle: "Patient response needed before the next call",
+        actionLabel: "Open chart",
+        locked: false,
+      },
+      {
+        title: "Approve reminder window",
+        subtitle: "Patient selected Tuesday at 7:30 PM",
+        actionLabel: "Approve",
+        locked: false,
+      },
+      {
+        title: "Confirm follow-up note",
+        subtitle: `Visit scheduled for ${appointmentLabel}`,
+        actionLabel: "Locked",
+        locked: true,
+      },
+    ]
     : [
-        {
-          title: "Shoulder mobility drill",
-          subtitle: "Scheduled for 2:00 PM",
-          actionLabel: "Start now",
-          locked: false,
-        },
-        {
-          title: "Daily hydration log",
-          subtitle: "Remaining 1.2L",
-          actionLabel: "Log intake",
-          locked: false,
-        },
-        {
-          title: openTasks[0]?.title ?? "Evening symptom check-in",
-          subtitle: openTasks[0]?.dueLabel ?? "Available from 6:00 PM",
-          actionLabel: "Locked",
-          locked: true,
-        },
-      ];
+      {
+        title: "Shoulder mobility drill",
+        subtitle: "Scheduled for 2:00 PM",
+        actionLabel: "Start now",
+        locked: false,
+      },
+      {
+        title: "Daily hydration log",
+        subtitle: "Remaining 1.2L",
+        actionLabel: "Log intake",
+        locked: false,
+      },
+      {
+        title: openTasks[0]?.title ?? "Evening symptom check-in",
+        subtitle: openTasks[0]?.dueLabel ?? "Available from 6:00 PM",
+        actionLabel: "Locked",
+        locked: true,
+      },
+    ];
 
   const heroCopy = isProvider
     ? {
-        heading: `${patientJourney.patient.name} needs one more touchpoint`,
-        body: patientJourney.providerSummary.recommendedAction,
-        planLabel: "Provider review",
-        detailLabel: profile.condition_name,
-        primaryLabel: "Review AI summary",
-        primaryHref: "/ai-insights",
-        secondaryLabel: "Message patient",
-        secondaryHref: "/messages",
-      }
+      heading: `${patientJourney.patient.name} needs one more touchpoint`,
+      body: patientJourney.providerSummary.recommendedAction,
+      planLabel: "Provider review",
+      detailLabel: conditionName,
+      primaryLabel: "Review AI summary",
+      primaryHref: "/ai-insights",
+      secondaryLabel: "Message patient",
+      secondaryHref: "/messages",
+    }
     : {
-        heading: `Hello, ${firstName}`,
-        body: "Week 3 of therapy. You're doing great! Keep up the consistency.",
-        planLabel: "Active plan",
-        detailLabel: profile.condition_name,
-        primaryLabel: "Log medication",
-        primaryHref: "/adherence",
-        secondaryLabel: "Message provider",
-        secondaryHref: "/messages",
-      };
+      heading: `Hello, ${firstName}`,
+      body: "Week 3 of therapy. You're doing great! Keep up the consistency.",
+      planLabel: "Active plan",
+      detailLabel: conditionName,
+      primaryLabel: "Log medication",
+      primaryHref: "/adherence",
+      secondaryLabel: "Message provider",
+      secondaryHref: "/messages",
+    };
 
   return (
     <PostLoginShell currentPath="/dashboard">
@@ -237,7 +223,10 @@ export default async function DashboardPage() {
           <div className="flex flex-wrap gap-3 lg:max-w-xs lg:flex-col lg:items-stretch">
             <Link
               href={heroCopy.primaryHref}
-              className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[#2558d7] shadow-[0_16px_28px_-20px_rgba(255,255,255,0.95)] transition hover:bg-blue-50"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold bg-white text-[#2558d7] shadow-[0_12px_24px_-16px_rgba(37,88,215,0.85)] border border-[#2558d7] transition hover:bg-blue-500"
+              style={{
+                color: '#2558d7 '
+              }}
             >
               {heroCopy.primaryLabel}
             </Link>

@@ -4,6 +4,7 @@ import { PostLoginShell } from "@/components/post-login-shell";
 import { RoleAwareEmptyState } from "@/components/role-aware-empty-state";
 import { requireAuthContext } from "@/lib/auth/server";
 import { resolveScopedPatientProfileId } from "@/lib/data/role-scope";
+import { patientJourney } from "@/lib/mock-data";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import type { CareTaskSource, CareTaskStatus } from "@/types/medi-connect";
 import { cx } from "@/theme";
@@ -89,29 +90,29 @@ function getTaskPriority(task: TaskRecord): TaskPriority {
 export default async function TasksPage() {
   const context = await requireAuthContext();
   const patientProfileId = await resolveScopedPatientProfileId(context);
+  let taskItems: TaskRecord[] = [];
 
-  if (!patientProfileId) {
-    return (
-      <PostLoginShell currentPath="/tasks">
-        <RoleAwareEmptyState
-          roleMode={context.role}
-          title="Tasks are not available yet"
-          description="No scoped patient profile exists for this session. Link a patient profile first."
-          ctaHref="/dashboard"
-          ctaLabel="Back to dashboard"
-        />
-      </PostLoginShell>
-    );
+  if (patientProfileId) {
+    const serviceClient = getSupabaseServiceClient();
+    const { data: tasks } = await serviceClient
+      .from("care_tasks")
+      .select("id, title, description, status, due_label, source, updated_at")
+      .eq("patient_profile_id", patientProfileId)
+      .order("updated_at", { ascending: false });
+
+    taskItems = ((tasks ?? []) as TaskRecord[]).sort(compareTasks);
+  } else {
+    taskItems = patientJourney.careTasks.map((task, index) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      due_label: task.dueLabel,
+      source: task.source,
+      updated_at: `2026-03-14T0${index + 8}:00:00.000Z`,
+    }));
   }
 
-  const serviceClient = getSupabaseServiceClient();
-  const { data: tasks } = await serviceClient
-    .from("care_tasks")
-    .select("id, title, description, status, due_label, source, updated_at")
-    .eq("patient_profile_id", patientProfileId)
-    .order("updated_at", { ascending: false });
-
-  const taskItems = ((tasks ?? []) as TaskRecord[]).sort(compareTasks);
   const completedTasks = taskItems.filter((task) => task.status === "complete");
   const openTasks = taskItems.filter((task) => task.status !== "complete");
 

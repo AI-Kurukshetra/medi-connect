@@ -19,19 +19,29 @@ export function SupportChat({ roleMode }: SupportChatProps) {
 
     startTransition(() => {
       void (async () => {
-        const response = await fetch("/api/support/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message,
-            module: "support",
-          }),
-        });
-        const data = (await response.json()) as {
-          data?: { answer?: string };
-          error?: string;
-        };
-        setAnswer(data.data?.answer ?? data.error ?? "No response");
+        try {
+          const response = await fetch("/api/support/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message,
+              module: "support",
+            }),
+          });
+          const data = (await response.json()) as {
+            data?: { answer?: string };
+            error?: string;
+          };
+
+          if (!response.ok) {
+            setAnswer(data.error ?? "Support bot is unavailable right now.");
+            return;
+          }
+
+          setAnswer(data.data?.answer ?? "No response");
+        } catch {
+          setAnswer("Support bot is unavailable right now. Please try again.");
+        }
       })();
     });
   };
@@ -40,6 +50,7 @@ export function SupportChat({ roleMode }: SupportChatProps) {
     <div className="space-y-5">
       <div className="flex flex-wrap gap-2">
         <StatusPill tone="accent">AI support active</StatusPill>
+        <StatusPill>Gemini</StatusPill>
         <StatusPill>{roleMode} mode</StatusPill>
       </div>
 
@@ -47,7 +58,7 @@ export function SupportChat({ roleMode }: SupportChatProps) {
         <div className={themeClassNames.softPanel}>
           <p className={themeClassNames.text.bodyStrong}>What to ask here</p>
           <p className={cx("mt-2", themeClassNames.text.body)}>
-            Ask about your next step, medication setup, reminders, or how to contact the care team.
+            Ask about your next step, how to use a MediConnect screen, reminders, messages, or how to contact the care team.
           </p>
         </div>
         <div className={themeClassNames.softPanel}>

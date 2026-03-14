@@ -150,7 +150,7 @@ function SidebarGlyph({
           <path d="M6 10h8" />
         </svg>
       );
-      default:
+    default:
       return null;
   }
 }
@@ -168,14 +168,30 @@ function SidebarLink({
     <Link
       href={item.href}
       className={cx(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-        isActive ? "bg-[#2563eb] text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white",
+        "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200",
+        isActive
+          ? "bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-slate-50 shadow-[0_18px_35px_-22px_rgba(59,130,246,0.95)] ring-1 ring-white/10"
+          : "text-slate-400 hover:bg-white/6 hover:text-slate-100",
       )}
     >
-      <span className={cx("flex h-4 w-4 items-center justify-center", isActive ? "text-white" : "text-slate-400")}>
+      <span
+        className={cx(
+          "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200",
+          isActive
+            ? "bg-white/14 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
+            : "bg-transparent text-slate-500 group-hover:bg-white/6 group-hover:text-slate-200",
+        )}
+      >
         <SidebarGlyph icon={item.icon} />
       </span>
-      <span>{item.label}</span>
+      <span
+        className={cx(
+          "tracking-[-0.01em] transition-colors duration-200",
+          isActive ? "font-semibold text-white" : "font-medium text-slate-400 group-hover:text-slate-100",
+        )}
+      >
+        {item.label}
+      </span>
     </Link>
   );
 }
@@ -198,10 +214,10 @@ function MobileRouteStrip({
               key={item.href}
               href={item.href}
               className={cx(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200",
                 isActive
-                  ? "border-transparent bg-[#2563eb] text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-600",
+                  ? "border-transparent bg-[linear-gradient(135deg,#4f86ff,#2f6cf0)] text-white shadow-[0_14px_28px_-18px_rgba(59,130,246,0.8)]"
+                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white",
               )}
             >
               <SidebarGlyph icon={item.icon} className="h-3.5 w-3.5" />
@@ -225,7 +241,7 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
   return (
     <div className="min-h-screen bg-[#edf2f8] p-1.5 sm:p-2.5">
       <div className="flex min-h-[calc(100vh-0.75rem)] overflow-hidden rounded-[28px] border border-[#d8e0ef] bg-[#f4f7fb] shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] sm:min-h-[calc(100vh-1.25rem)]">
-        <aside className="hidden w-[260px] shrink-0 flex-col bg-[#0f172a] px-5 py-5 lg:flex">
+        <aside className="hidden w-[260px] shrink-0 flex-col bg-[linear-gradient(180deg,#111a30_0%,#0f172a_52%,#11182b_100%)] px-5 py-5 lg:flex">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2563eb] text-white shadow-[0_12px_24px_-16px_rgba(37,99,235,0.85)]">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -261,13 +277,13 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
             ))}
           </nav>
 
-              <div className="mt-auto border-t border-slate-800 pt-4">
-                <SignOutButton className="w-full justify-start gap-3 border-slate-800 bg-transparent px-3 text-slate-400 shadow-none hover:bg-slate-800 hover:text-white">
-                  <SidebarGlyph icon="logout" />
-                  <span>Sign Out</span>
-                </SignOutButton>
-              </div>
-            </aside>
+          <div className="mt-auto border-t border-slate-800 pt-4">
+            <SignOutButton className="w-full justify-start gap-3 border-slate-800 bg-transparent px-3 text-slate-400 shadow-none hover:bg-slate-800 hover:text-white">
+              <SidebarGlyph icon="logout" />
+              <span>Sign Out</span>
+            </SignOutButton>
+          </div>
+        </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
@@ -282,13 +298,13 @@ export async function PostLoginShell({ currentPath, children }: PostLoginShellPr
               </label>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                <button
+                {/* <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
                   aria-label="Toggle theme"
                 >
                   <SidebarGlyph icon="moon" className="h-4 w-4" />
-                </button>
+                </button> */}
                 <button
                   type="button"
                   className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"

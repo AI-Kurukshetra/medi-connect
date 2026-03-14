@@ -78,8 +78,8 @@ export const appTheme = {
   ui: {
     headerCard:
       "surface-card-strong mb-6 flex flex-col gap-4 rounded-[28px] px-5 py-4 sm:px-6 sm:py-5 lg:flex-row lg:items-center lg:justify-between",
-    heroCard: "surface-card-strong spotlight-panel rounded-[36px] p-7 md:p-9 lg:p-10",
-    heroSectionCard: "surface-card-strong spotlight-panel rounded-[34px] p-7 md:p-9",
+    heroCard: "surface-card-strong rounded-[36px] p-7 md:p-9 lg:p-10",
+    heroSectionCard: "surface-card-strong rounded-[34px] p-7 md:p-9",
     sectionCard: "surface-card rounded-[28px] p-6 md:p-7",
     sidebarCard: "surface-card-strong rounded-[28px] p-5",
     authCard: "surface-card-strong rounded-[34px] p-6 sm:p-8 md:p-10",

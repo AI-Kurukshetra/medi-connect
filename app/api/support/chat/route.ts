@@ -1,6 +1,7 @@
 import { error, ok, resolveTraceId } from "@/lib/api/envelope";
 import { createAuditEvent, redactedMetadata } from "@/lib/audit/events";
 import { requireApiAuthContext } from "@/lib/auth/api";
+import { patientJourney } from "@/lib/mock-data";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 
 interface SupportChatBody {
@@ -16,15 +17,57 @@ interface SupportChatBody {
     | "emergency";
 }
 
-function getSystemPrompt(role: "patient" | "provider") {
-  if (role === "provider") {
-    return "You are a provider support assistant. Keep responses concise, operational, and patient-safe. Do not make diagnosis or treatment decisions.";
-  }
-
-  return "You are a patient support assistant. Explain in plain language, keep instructions simple, and recommend contacting the care team for clinical decisions.";
+interface GeminiGenerateContentResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+  promptFeedback?: {
+    blockReason?: string;
+  };
 }
 
-function detectSeverityFromMessage(message: string): "low" | "medium" | "high" | "critical" {
+type Severity = "low" | "medium" | "high" | "critical";
+
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+
+function getSystemPrompt(role: "patient" | "provider", moduleLabel: string) {
+  const roleGuidance =
+    role === "provider"
+      ? [
+          "You support care coordinators and providers using the MediConnect MVP.",
+          "Keep answers concise, operational, and easy to scan.",
+          "Help with workflow questions, follow-up wording, patient-facing summaries, and where to find information in the product.",
+        ]
+      : [
+          "You support patients using the MediConnect MVP.",
+          "Use calm plain language, short sentences, and explain what happens next.",
+          "Help users understand the product, their checklist, reminders, and how to contact the care team.",
+        ];
+
+  return [
+    "You are MediConnect Support, a platform help assistant for a hackathon MVP focused on specialty medication care coordination.",
+    ...roleGuidance,
+    "Your main job is to answer questions about how the platform works and what the user should do next inside the app.",
+    "Only describe features that exist in this MVP experience: Dashboard, Tasks, Adherence, Reminders, Messages, Account, Support, Medication Help, and Provider Review.",
+    "Do not invent enterprise modules, insurance automation, billing workflows, or hidden backend actions.",
+    "You may explain, summarize, and draft. You must not diagnose, interpret symptoms clinically, recommend dosage changes, or make treatment decisions.",
+    "If the user asks for medical advice, explain the platform limitation and direct them to their care team.",
+    "If the user sounds urgent or unsafe, tell them to seek immediate human help and keep the answer short.",
+    "When helpful, reference the current MediConnect demo context:",
+    `- Condition: ${patientJourney.profile.condition}`,
+    `- Medication: ${patientJourney.medication.name} ${patientJourney.medication.dosage}`,
+    `- Therapy status: ${patientJourney.profile.therapyStatus}`,
+    `- Next appointment: ${patientJourney.profile.nextAppointmentAt}`,
+    `- Current module: ${moduleLabel}`,
+    "Keep answers under 180 words unless the user explicitly asks for more detail.",
+  ].join("\n");
+}
+
+function detectSeverityFromMessage(message: string): Severity {
   if (/(cannot breathe|trouble breathing|severe chest pain|passed out|anaphylaxis)/i.test(message)) {
     return "critical";
   }
@@ -37,11 +80,113 @@ function detectSeverityFromMessage(message: string): "low" | "medium" | "high" |
   return "low";
 }
 
-function slaForSeverity(severity: "low" | "medium" | "high" | "critical") {
+function slaForSeverity(severity: Severity) {
   if (severity === "critical") return 1;
   if (severity === "high") return 4;
   if (severity === "medium") return 8;
   return 24;
+}
+
+function buildSupportUserPrompt(params: {
+  role: "patient" | "provider";
+  message: string;
+  moduleLabel: string;
+}) {
+  return [
+    `Role: ${params.role}`,
+    `Module: ${params.moduleLabel}`,
+    "User request:",
+    params.message,
+    "",
+    "Answer as MediConnect Support.",
+    "Prefer platform guidance and next-step clarity over general medical education.",
+    "If the question is outside the app or needs clinical judgment, say so clearly and direct them to the care team.",
+  ].join("\n");
+}
+
+function extractGeminiText(payload: GeminiGenerateContentResponse) {
+  const text = payload.candidates
+    ?.flatMap((candidate) => candidate.content?.parts ?? [])
+    .map((part) => part.text?.trim())
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+
+  return text || null;
+}
+
+function buildEscalationReply(role: "patient" | "provider", severity: Severity) {
+  if (role === "provider") {
+    return severity === "critical"
+      ? "This message may indicate an urgent safety issue. An escalation incident has been opened for immediate human review. Please move this out of chat and follow your emergency workflow now."
+      : "This message may need prompt clinical review. An escalation incident has been opened. Please review the patient context and follow up through the care team workflow.";
+  }
+
+  return severity === "critical"
+    ? "Your message may describe an urgent health issue. Please seek immediate in-person help or call emergency services now. I also flagged this for human review in MediConnect."
+    : "Your message may need prompt human review. Please contact your care team as soon as possible. I also flagged this for follow-up in MediConnect.";
+}
+
+async function generateGeminiSupportAnswer(params: {
+  role: "patient" | "provider";
+  message: string;
+  moduleLabel: string;
+}) {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error("Support bot is not configured. Add GEMINI_API_KEY to your environment.");
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_GEMINI_MODEL}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: getSystemPrompt(params.role, params.moduleLabel) }],
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: buildSupportUserPrompt(params),
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 320,
+        },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    throw new Error(
+      `Gemini request failed with status ${response.status}. ${responseText.slice(0, 240)}`,
+    );
+  }
+
+  const payload = (await response.json()) as GeminiGenerateContentResponse;
+
+  if (payload.promptFeedback?.blockReason) {
+    throw new Error(`Gemini blocked this request: ${payload.promptFeedback.blockReason}.`);
+  }
+
+  const answer = extractGeminiText(payload);
+  if (!answer) {
+    throw new Error("Gemini returned no text content.");
+  }
+
+  return answer;
 }
 
 export async function POST(request: Request) {
@@ -65,7 +210,6 @@ export async function POST(request: Request) {
     });
   }
 
-  const systemPrompt = getSystemPrompt(auth.context.role);
   const moduleLabel = body.module ?? "support";
   const severity = detectSeverityFromMessage(message);
   const triggersEscalation = severity === "high" || severity === "critical";
@@ -133,47 +277,86 @@ export async function POST(request: Request) {
     }
   }
 
-  const reply =
-    auth.context.role === "provider"
-      ? `Provider support (${moduleLabel}): review blockers, confirm ownership, and queue follow-up actions requiring approval.`
-      : `Patient support (${moduleLabel}): complete one next step, review reminders, and notify your care team if symptoms worsen.`;
+  try {
+    const answer =
+      triggersEscalation
+        ? buildEscalationReply(auth.context.role, severity)
+        : await generateGeminiSupportAnswer({
+            role: auth.context.role,
+            message,
+            moduleLabel,
+          });
 
-  const safetySuffix = triggersEscalation
-    ? "Safety note: this message triggered an escalation incident for human review."
-    : "Safety note: no emergency escalation was triggered from this message.";
+    const auditRef = await createAuditEvent({
+      context: auth.context,
+      action: "support.chat.message",
+      resourceType: "support_chat",
+      resourceId: incident?.id ?? adverseEvent?.id ?? null,
+      traceId,
+      scopeContext: {
+        patientProfileId: auth.context.patientProfileId,
+        module: "support-chat",
+      },
+      metadata: redactedMetadata({
+        severity,
+        escalationTriggered: triggersEscalation,
+        module: moduleLabel,
+        provider: triggersEscalation ? "safety-fallback" : "gemini",
+        model: triggersEscalation ? null : DEFAULT_GEMINI_MODEL,
+      }),
+    });
 
-  const auditRef = await createAuditEvent({
-    context: auth.context,
-    action: "support.chat.message",
-    resourceType: "support_chat",
-    resourceId: incident?.id ?? adverseEvent?.id ?? null,
-    traceId,
-    scopeContext: {
-      patientProfileId: auth.context.patientProfileId,
-      module: "support-chat",
-    },
-    metadata: redactedMetadata({
-      severity,
-      escalationTriggered: triggersEscalation,
-      module: moduleLabel,
-    }),
-  });
+    return ok({
+      roleMode: auth.context.role,
+      scopeContext: {
+        patientProfileId: auth.context.patientProfileId,
+        module: "support-chat",
+      },
+      traceId,
+      auditRef,
+      data: {
+        answer,
+        adverseEvent,
+        incident,
+        severity,
+        provider: triggersEscalation ? "safety-fallback" : "gemini",
+        model: triggersEscalation ? null : DEFAULT_GEMINI_MODEL,
+      },
+    });
+  } catch (caughtError) {
+    const messageText =
+      caughtError instanceof Error ? caughtError.message : "Support generation failed.";
 
-  return ok({
-    roleMode: auth.context.role,
-    scopeContext: {
-      patientProfileId: auth.context.patientProfileId,
-      module: "support-chat",
-    },
-    traceId,
-    auditRef,
-    data: {
-      systemPrompt,
-      answer: `${reply}\n\n${safetySuffix}\n\nQuestion received: "${message}"`,
-      adverseEvent,
-      incident,
-      severity,
-    },
-  });
+    const auditRef = await createAuditEvent({
+      context: auth.context,
+      action: "support.chat.message",
+      resourceType: "support_chat",
+      resourceId: incident?.id ?? adverseEvent?.id ?? null,
+      traceId,
+      scopeContext: {
+        patientProfileId: auth.context.patientProfileId,
+        module: "support-chat",
+      },
+      metadata: redactedMetadata({
+        severity,
+        escalationTriggered: triggersEscalation,
+        module: moduleLabel,
+        provider: "gemini",
+        model: DEFAULT_GEMINI_MODEL,
+        generationError: true,
+      }),
+    });
+
+    return error({
+      traceId,
+      error: messageText,
+      status: 503,
+      roleMode: auth.context.role,
+      auditRef,
+      scopeContext: {
+        patientProfileId: auth.context.patientProfileId,
+        module: "support-chat",
+      },
+    });
+  }
 }
-

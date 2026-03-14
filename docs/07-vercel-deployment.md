@@ -32,7 +32,11 @@ Deploy the MediConnect MVP to Vercel with the minimum configuration needed for a
 
 ### Required When AI Server Routes Are Enabled
 
-- `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
+
+### Optional AI Configuration
+
+- `GEMINI_MODEL`
 
 ### Required Only For Server-Side Supabase Admin Actions
 
